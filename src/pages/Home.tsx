@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { trpc } from "../providers/trpcClient";
 import type { TitleData } from "../components/MovieCard";
+import homeBackground from "../../assets/home background.png";
 
 export default function Home() {
   const { data: trendingData, isLoading: trendingLoading } =
@@ -27,7 +28,7 @@ export default function Home() {
         {/* Background */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src="../../assets/home background.png"
+            src={homeBackground}
             alt="Cinema background"
             className="w-full h-full object-cover object-center"
           />

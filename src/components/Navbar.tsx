@@ -19,8 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import logoWatchWise from "../../assets/WatchWise_logo.png";
 
-export const navLinks = [
+const navLinks = [
   { label: "Home", href: "/", icon: LayoutDashboard },
   { label: "Discover", href: "/discover", icon: Compass },
   { label: "Search", href: "/search", icon: Search },
@@ -60,7 +61,7 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
           </button>
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <img
-              src="../../assets/WatchWise_logo.png"
+              src={logoWatchWise}
               alt="the logo of WatchWise"
               className="h-9 w-auto object-contain transition-transform duration-200"
             />
