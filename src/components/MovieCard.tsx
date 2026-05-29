@@ -15,8 +15,28 @@ import {
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 
+export type MediaType = "movie" | "tv" | undefined;
+
+export interface NormalizedTitle {
+  id: number;
+  title: string;
+  type: "movie" | "series";
+  description: string;
+  genres: string[];
+  moods: string[];
+  rating: number;
+  popularity_score: number;
+  hidden_gem_score: number;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  releaseDate: string | null;
+  mediaType: MediaType;
+}
+
+export type TitleData = NormalizedTitle;
+
 interface MovieCardProps {
-  title: any;
+  title: TitleData;
   variant?: "default" | "large" | "compact";
   showQuickActions?: boolean;
   userStatus?: "want_to_watch" | "watched" | "skipped" | null;
