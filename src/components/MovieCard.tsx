@@ -3,7 +3,6 @@ import { Link } from "react-router";
 import { BookmarkPlus, Eye, X, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
-import type { NormalizedTitle } from "../../../server/services/tmdb";
 import { trpc } from "@/providers/trpcClient";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,10 +15,8 @@ import {
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 
-export type TitleData = NormalizedTitle;
-
 interface MovieCardProps {
-  title: TitleData;
+  title: any;
   variant?: "default" | "large" | "compact";
   showQuickActions?: boolean;
   userStatus?: "want_to_watch" | "watched" | "skipped" | null;
