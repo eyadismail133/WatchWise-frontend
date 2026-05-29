@@ -14,7 +14,7 @@ export default function Home() {
     trpc.movie.topRated.useQuery({ mediaType: "movie", page: 1 });
 
   const { data: upComingData, isLoading: upComingLoading } =
-    trpc.movie.topRated.useQuery({ mediaType: "movie", page: 1 });
+    trpc.movie.upComing.useQuery({ mediaType: "movie", page: 1 });
 
   const trending = (trendingData?.results ?? []) as TitleData[];
   const topRating = (topRatedData?.results ?? []) as TitleData[];
