@@ -1,6 +1,21 @@
 import { Link, useLocation } from "react-router";
 import { useState } from "react";
-import { Navbar, navLinks } from "./Navbar";
+import { Navbar } from "./Navbar";
+import {
+  BookmarkPlus,
+  Compass,
+  LayoutDashboard,
+  Search,
+  UserCircle,
+} from "lucide-react";
+
+const navLinks = [
+  { label: "Home", href: "/", icon: LayoutDashboard },
+  { label: "Discover", href: "/discover", icon: Compass },
+  { label: "Search", href: "/search", icon: Search },
+  { label: "Watchlist", href: "/watchlist", icon: BookmarkPlus },
+  { label: "My Taste", href: "/taste", icon: UserCircle },
+];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
