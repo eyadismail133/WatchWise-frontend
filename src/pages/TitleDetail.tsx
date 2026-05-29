@@ -25,76 +25,141 @@ import {
 } from "../components/ui/dialog";
 import { toast } from "sonner";
 
+type ExtendedTitleData = TitleData & {
+  tagline?: string | null;
+  runtime?: number | null;
+  releaseYear?: number | null;
+  language?: string | null;
+  country?: string | null;
+  imdbRating?: number | null;
+  trailerKey?: string | null;
+  status?: string | null;
+  mediaType?: "movie" | "tv";
+
+  castCards: {
+    id: number;
+    name: string;
+    image: string | null;
+    character: string | null;
+  }[];
+
+  directorCard: {
+    id: number;
+    name: string;
+    image: string | null;
+  } | null;
+
+  director?: string | null;
+
+  numberOfSeasons?: number | null;
+  numberOfEpisodes?: number | null;
+};
+
 export default function TitleDetail() {
   const { id, mediaType: mediaTypeParam } = useParams<{
     id: string;
     mediaType?: string;
   }>();
+
   const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
 
   const tmdbId = parseInt(id || "0", 10);
-  const mediaType =
-    mediaTypeParam === "tv" || mediaTypeParam === "movie"
-      ? mediaTypeParam
-      : searchParams.get("mediaType") === "tv"
-        ? "tv"
-        : "movie";
+  const mediaType: "movie" | "tv" =
+    mediaTypeParam === "tv"
+      ? "tv"
+      : mediaTypeParam === "movie"
+        ? "movie"
+        : searchParams.get("mediaType") === "tv"
+          ? "tv"
+          : "movie";
 
   const titleQuery = trpc.movie.details.useQuery(
     { id: tmdbId, mediaType },
     { enabled: tmdbId > 0 },
   );
+
   const similarQuery = trpc.movie.similar.useQuery(
     { id: tmdbId, mediaType, page: 1 },
     { enabled: tmdbId > 0 },
   );
+
   const watchlistQuery = trpc.watchlist.getByTitle.useQuery(
     { tmdbId, mediaType },
     { enabled: isAuthenticated && tmdbId > 0 },
   );
+
   const favoriteQuery = trpc.favorite.isFavorite.useQuery(
     { tmdbId, mediaType },
     { enabled: isAuthenticated && tmdbId > 0 },
   );
 
   const utils = trpc.useUtils();
+
   const addToWatchlist = trpc.watchlist.add.useMutation({
     onSuccess: () => {
-      utils.watchlist.getByTitle.invalidate({ tmdbId, mediaType });
+      utils.watchlist.getByTitle.invalidate({
+        tmdbId,
+        mediaType,
+      });
+
       utils.watchlist.list.invalidate();
+
       toast.success("Added to watchlist");
     },
+
     onError: (err) => toast.error(err.message),
   });
+
   const updateWatchlist = trpc.watchlist.update.useMutation({
     onSuccess: () => {
-      utils.watchlist.getByTitle.invalidate({ tmdbId, mediaType });
+      utils.watchlist.getByTitle.invalidate({
+        tmdbId,
+        mediaType,
+      });
+
       utils.watchlist.list.invalidate();
     },
+
     onError: (err) => toast.error(err.message),
   });
+
   const addFavorite = trpc.favorite.add.useMutation({
     onSuccess: () => {
-      utils.favorite.isFavorite.invalidate({ tmdbId, mediaType });
+      utils.favorite.isFavorite.invalidate({
+        tmdbId,
+        mediaType,
+      });
+
       toast.success("Added to favorites");
     },
+
     onError: (err) => toast.error(err.message),
   });
+
   const removeFavorite = trpc.favorite.remove.useMutation({
     onSuccess: () => {
-      utils.favorite.isFavorite.invalidate({ tmdbId, mediaType });
+      utils.favorite.isFavorite.invalidate({
+        tmdbId,
+        mediaType,
+      });
+
       toast.success("Removed from favorites");
     },
+
     onError: (err) => toast.error(err.message),
   });
 
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
+
   const [userRating, setUserRating] = useState(0);
 
-  const title = titleQuery.data;
+  const title = titleQuery.data as ExtendedTitleData | undefined;
+
   const similar = (similarQuery.data?.results ?? []) as TitleData[];
+
   const watchlistItem = watchlistQuery.data;
+
   const isFavorite = favoriteQuery.data?.isFavorite ?? false;
 
   if (titleQuery.isLoading) {
@@ -112,6 +177,7 @@ export default function TitleDetail() {
           <h2 className="font-display text-2xl font-bold mb-2">
             Title Not Found
           </h2>
+
           <Link to="/" className="text-[#d4a843] hover:underline">
             Go back home
           </Link>
@@ -123,26 +189,42 @@ export default function TitleDetail() {
   const requireAuth = (action: () => void) => {
     if (!isAuthenticated) {
       toast.error("Sign in to use watchlist and favorites");
+
       return;
     }
+
     action();
   };
 
   const handleAddToWatchlist = () => {
     requireAuth(() =>
-      addToWatchlist.mutate({ tmdbId, mediaType, status: "want_to_watch" }),
+      addToWatchlist.mutate({
+        tmdbId,
+        mediaType,
+        status: "want_to_watch",
+      }),
     );
   };
 
   const handleMarkWatched = () => {
     requireAuth(() => {
       if (watchlistItem) {
-        updateWatchlist.mutate({ id: watchlistItem.id, status: "watched" });
+        updateWatchlist.mutate({
+          id: watchlistItem.id,
+          status: "watched",
+        });
+
         setRatingDialogOpen(true);
       } else {
         addToWatchlist.mutate(
-          { tmdbId, mediaType, status: "watched" },
-          { onSuccess: () => setRatingDialogOpen(true) },
+          {
+            tmdbId,
+            mediaType,
+            status: "watched",
+          },
+          {
+            onSuccess: () => setRatingDialogOpen(true),
+          },
         );
       }
     });
@@ -151,17 +233,27 @@ export default function TitleDetail() {
   const handleToggleFavorite = () => {
     requireAuth(() => {
       if (isFavorite) {
-        removeFavorite.mutate({ tmdbId, mediaType });
+        removeFavorite.mutate({
+          tmdbId,
+          mediaType,
+        });
       } else {
-        addFavorite.mutate({ tmdbId, mediaType });
+        addFavorite.mutate({
+          tmdbId,
+          mediaType,
+        });
       }
     });
   };
 
   const handleRate = () => {
     if (watchlistItem && userRating > 0) {
-      updateWatchlist.mutate({ id: watchlistItem.id, userRating });
+      updateWatchlist.mutate({
+        id: watchlistItem.id,
+        userRating,
+      });
     }
+
     setRatingDialogOpen(false);
   };
 
@@ -177,7 +269,9 @@ export default function TitleDetail() {
           alt={title.title}
           className="absolute inset-0 w-full h-full object-cover"
         />
+
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
+
         <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent" />
 
         <div className="absolute top-4 left-4 z-10">
@@ -193,9 +287,17 @@ export default function TitleDetail() {
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
           <div className="max-w-6xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.6,
+              }}
             >
               {watchlistItem && (
                 <span
@@ -225,27 +327,35 @@ export default function TitleDetail() {
 
               <div className="flex flex-wrap items-center gap-3 text-sm text-white/70 mb-4">
                 {title.releaseYear && <span>{title.releaseYear}</span>}
+
                 <span>·</span>
+
                 <span className="capitalize">{title.type}</span>
+
                 {title.runtime ? (
                   <>
                     <span>·</span>
+
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
                       {title.runtime} min
                     </span>
                   </>
                 ) : null}
+
                 {title.language && (
                   <>
                     <span>·</span>
+
                     <span className="flex items-center gap-1">
                       <Globe className="w-3.5 h-3.5" />
                       {title.language}
                     </span>
                   </>
                 )}
+
                 <span>·</span>
+
                 <span className="text-[#d4a843] font-bold">
                   {title.rating.toFixed(1)}/10
                 </span>
@@ -277,6 +387,7 @@ export default function TitleDetail() {
                   }
                 >
                   <BookmarkPlus className="w-4 h-4 mr-2" />
+
                   {watchlistItem?.status === "want_to_watch"
                     ? "Saved"
                     : "Add to Watchlist"}
@@ -294,6 +405,7 @@ export default function TitleDetail() {
                   }
                 >
                   <Eye className="w-4 h-4 mr-2" />
+
                   {watchlistItem?.status === "watched"
                     ? "Watched"
                     : "Mark Watched"}
@@ -309,8 +421,11 @@ export default function TitleDetail() {
                   }
                 >
                   <Heart
-                    className={`w-4 h-4 mr-2 ${isFavorite ? "fill-current" : ""}`}
+                    className={`w-4 h-4 mr-2 ${
+                      isFavorite ? "fill-current" : ""
+                    }`}
                   />
+
                   {isFavorite ? "Favorited" : "Add to Favorites"}
                 </Button>
 
@@ -332,6 +447,7 @@ export default function TitleDetail() {
                   className="border-white/30 text-white hover:bg-white/10"
                   onClick={() => {
                     navigator.clipboard?.writeText(window.location.href);
+
                     toast.success("Link copied");
                   }}
                 >
@@ -348,44 +464,92 @@ export default function TitleDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
             >
               <h2 className="font-display text-xl font-bold mb-3">Synopsis</h2>
+
               <p className="text-muted-foreground leading-relaxed text-lg">
                 {title.description || "No synopsis available."}
               </p>
             </motion.section>
 
-            {title.cast.length > 0 && (
+            {(title.castCards.length > 0 || title.directorCard) && (
               <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: 0.1,
+                }}
               >
                 <h2 className="font-display text-xl font-bold mb-4">
                   Cast & Crew
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {title.cast.map((actor) => (
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {title.castCards.map((actor) => (
                     <div
-                      key={actor}
+                      key={actor.id}
                       className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50"
                     >
-                      <span className="text-sm font-medium truncate">
-                        {actor}
-                      </span>
+                      {actor.image ? (
+                        <img
+                          src={actor.image}
+                          alt={actor.name}
+                          className="w-14 h-14 rounded-full object-cover border border-border/50"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
+                          {actor.name.charAt(0)}
+                        </div>
+                      )}
+
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium block truncate">
+                          {actor.name}
+                        </span>
+
+                        {actor.character && (
+                          <span className="text-xs text-muted-foreground block truncate">
+                            {actor.character}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
-                  {title.director && (
+
+                  {title.directorCard && (
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-[#d4a843]/30">
-                      <div>
+                      {title.directorCard.image ? (
+                        <img
+                          src={title.directorCard.image}
+                          alt={title.directorCard.name}
+                          className="w-14 h-14 rounded-full object-cover border border-[#d4a843]/30"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-[#d4a843]/10 flex items-center justify-center text-sm font-bold text-[#d4a843]">
+                          {title.directorCard.name.charAt(0)}
+                        </div>
+                      )}
+
+                      <div className="min-w-0">
                         <span className="text-sm font-medium block truncate">
-                          {title.director}
+                          {title.directorCard.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          Director
-                        </span>
+
+                        <span className="text-xs text-[#d4a843]">Director</span>
                       </div>
                     </div>
                   )}
@@ -397,50 +561,89 @@ export default function TitleDetail() {
           <div className="space-y-6">
             <div className="p-5 rounded-xl bg-card border border-border/50">
               <h3 className="font-display text-lg font-bold mb-4">Ratings</h3>
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  TMDB Score
+                  {(mediaType === "tv" ? "Series" : "movie") + " Score"}
                 </span>
+
                 <span className="text-sm font-bold">
-                  {title.imdbRating?.toFixed(1) ?? title.rating.toFixed(1)}/10
+                  {title.imdbRating?.toFixed(1) ?? title.rating.toFixed(1)}
+                  /10
                 </span>
               </div>
             </div>
 
             <div className="p-5 rounded-xl bg-card border border-border/50">
               <h3 className="font-display text-lg font-bold mb-4">Details</h3>
+
               <div className="space-y-3 text-sm">
                 {title.releaseYear && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Released</span>
+
                     <span>{title.releaseYear}</span>
                   </div>
                 )}
+
                 {title.runtime && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Runtime</span>
+
                     <span>{title.runtime} min</span>
                   </div>
                 )}
+
                 {title.language && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Language</span>
+
                     <span>{title.language}</span>
                   </div>
                 )}
+
                 {title.country && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Country</span>
+
                     <span>{title.country}</span>
                   </div>
                 )}
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Type</span>
+
                   <span className="capitalize">{title.type}</span>
                 </div>
+
+                {title.mediaType === "tv" && title.numberOfSeasons && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Seasons</span>
+
+                    <span>{title.numberOfSeasons}</span>
+                  </div>
+                )}
+
+                {title.mediaType === "tv" && title.numberOfEpisodes && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Episodes</span>
+
+                    <span>{title.numberOfEpisodes}</span>
+                  </div>
+                )}
+
+                {title.director && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Director</span>
+
+                    <span className="text-right">{title.director}</span>
+                  </div>
+                )}
+
                 {title.status && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Status</span>
+
                     <span>{title.status}</span>
                   </div>
                 )}
@@ -454,6 +657,7 @@ export default function TitleDetail() {
             <h2 className="font-display text-2xl font-bold mb-6">
               Similar Titles
             </h2>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {similar.map((t, i) => (
                 <MovieCard key={`${t.mediaType}-${t.id}`} title={t} index={i} />
@@ -467,13 +671,15 @@ export default function TitleDetail() {
         <DialogContent className="bg-card border-border">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">
-              Rate &quot;{title.title}&quot;
+              Rate "{title.title}"
             </DialogTitle>
           </DialogHeader>
+
           <div className="py-6">
             <p className="text-sm text-muted-foreground mb-4">
               How would you rate this {title.type}?
             </p>
+
             <div className="flex items-center justify-center gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -492,6 +698,7 @@ export default function TitleDetail() {
                 </button>
               ))}
             </div>
+
             <Button
               onClick={handleRate}
               disabled={userRating === 0}
