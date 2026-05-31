@@ -227,7 +227,6 @@ export function MovieCard({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* IMPORTANT FIX */}
         <Link to={`/title/${mediaType}/${title.id}`}>
           <div
             className={`relative overflow-hidden rounded-xl card-shadow transition-all duration-300 ${
@@ -271,17 +270,12 @@ export function MovieCard({
             )}
 
             {currentUserRating > 0 && isWatched && (
-              <div className="absolute bottom-2 right-2 flex items-center gap-0.5 bg-black/70 rounded-md px-1.5 py-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3 h-3 ${
-                      i < currentUserRating
-                        ? "text-yellow-400 fill-yellow-400"
-                        : "text-gray-600"
-                    }`}
-                  />
-                ))}
+              <div className="absolute top-2 left-2 md:bottom-2 md:right-2 md:top-auto md:left-auto flex items-center gap-0.5 bg-black/70 rounded-md px-1.5 py-0.5">
+                {" "}
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs text-white">
+                  {currentUserRating}/5
+                </span>
               </div>
             )}
 

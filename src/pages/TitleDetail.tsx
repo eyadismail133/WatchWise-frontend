@@ -392,7 +392,6 @@ export default function TitleDetail() {
                     ? "Saved"
                     : "Add to Watchlist"}
                 </Button>
-
                 <Button
                   onClick={handleMarkWatched}
                   variant={
@@ -410,7 +409,6 @@ export default function TitleDetail() {
                     ? "Watched"
                     : "Mark Watched"}
                 </Button>
-
                 <Button
                   onClick={handleToggleFavorite}
                   variant={isFavorite ? "default" : "outline"}
@@ -428,7 +426,6 @@ export default function TitleDetail() {
 
                   {isFavorite ? "Favorited" : "Add to Favorites"}
                 </Button>
-
                 {trailerUrl && (
                   <Button
                     variant="outline"
@@ -445,10 +442,26 @@ export default function TitleDetail() {
                 <Button
                   variant="outline"
                   className="border-white/30 text-white hover:bg-white/10"
-                  onClick={() => {
-                    navigator.clipboard?.writeText(window.location.href);
+                  onClick={async () => {
+                    const shareData = {
+                      title: document.title,
+                      text: "Check this out",
+                      url: window.location.href,
+                    };
 
-                    toast.success("Link copied");
+                    try {
+                      if (navigator.share) {
+                        await navigator.share(shareData);
+                      } else {
+                        await navigator.clipboard.writeText(
+                          window.location.href,
+                        );
+                        toast.success("Link copied");
+                      }
+                    } catch (error) {
+                      // User cancelled sharing
+                      console.log(error);
+                    }
                   }}
                 >
                   <Share2 className="w-4 h-4 mr-2" />

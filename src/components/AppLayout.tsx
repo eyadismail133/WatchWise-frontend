@@ -14,7 +14,7 @@ const navLinks = [
   { label: "Discover", href: "/discover", icon: Compass },
   { label: "Search", href: "/search", icon: Search },
   { label: "Watchlist", href: "/watchlist", icon: BookmarkPlus },
-  { label: "My Taste", href: "/taste", icon: UserCircle },
+  { label: "Taste", href: "/taste", icon: UserCircle },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {

@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import logoWatchWise from "../../assets/WatchWise_logo.png";
 
 const navLinks = [
@@ -26,7 +26,7 @@ const navLinks = [
   { label: "Discover", href: "/discover", icon: Compass },
   { label: "Search", href: "/search", icon: Search },
   { label: "Watchlist", href: "/watchlist", icon: BookmarkPlus },
-  { label: "My Taste", href: "/taste", icon: UserCircle },
+  { label: "Taste", href: "/taste", icon: UserCircle },
 ];
 
 type NavbarProps = {
@@ -96,10 +96,16 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
                   className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-muted/50 transition-colors"
                 >
                   <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={user.image ?? ""}
+                      alt={user.name ?? "User"}
+                      className="object-cover"
+                    />
                     <AvatarFallback className="bg-[#d4a843]/20 text-[#d4a843] text-xs">
-                      {(user.name ?? user.email ?? "U").charAt(0).toUpperCase()}
+                      ?
                     </AvatarFallback>
                   </Avatar>
+
                   <span className="hidden sm:block text-sm font-medium max-w-[120px] truncate">
                     {user.name ?? user.email}
                   </span>
@@ -107,10 +113,10 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/taste">My Taste Profile</Link>
+                  <Link to="/taste">Taste Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/watchlist">My Watchlist</Link>
+                  <Link to="/watchlist">Watchlist</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive cursor-pointer"
