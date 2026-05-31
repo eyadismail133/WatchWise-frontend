@@ -102,7 +102,7 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
                       className="object-cover"
                     />
                     <AvatarFallback className="bg-[#d4a843]/20 text-[#d4a843] text-xs">
-                      ?
+                      {user.name?.charAt(0).toUpperCase()}{" "}
                     </AvatarFallback>
                   </Avatar>
 
