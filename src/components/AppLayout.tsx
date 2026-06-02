@@ -7,19 +7,37 @@ import {
   LayoutDashboard,
   Search,
   UserCircle,
+  Rss,
+  User,
 } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { trpc } from "../providers/trpcClient";
 
-const navLinks = [
+const baseNavLinks = [
   { label: "Home", href: "/", icon: LayoutDashboard },
   { label: "Discover", href: "/discover", icon: Compass },
   { label: "Search", href: "/search", icon: Search },
   { label: "Watchlist", href: "/watchlist", icon: BookmarkPlus },
+  { label: "Feed", href: "/feed", icon: Rss },
   { label: "Taste", href: "/taste", icon: UserCircle },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const { data: profile } = trpc.user.getMyProfile.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  const profileLink = profile?.username
+    ? { label: "Profile", href: `/u/${profile.username}`, icon: User }
+    : null;
+
+  const navLinks = profileLink
+    ? [...baseNavLinks.slice(0, 5), profileLink]
+    : baseNavLinks;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

@@ -49,6 +49,7 @@ export function MovieCard({
   variant = "default",
   showQuickActions = true,
   userStatus,
+  userRate,
   index = 0,
 }: MovieCardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -142,7 +143,8 @@ export function MovieCard({
 
   const isWatched = watchlistItem?.status === "watched";
 
-  const currentUserRating = watchlistItem?.userRating ?? 0;
+  const currentUserRating = userRate !== undefined ? userRate : (watchlistItem?.userRating ?? 0);
+  const effectiveWatched = isWatched || userStatus === "watched";
 
   const handleAddToWatchlist = () => {
     requireAuth(() => {
@@ -269,7 +271,7 @@ export function MovieCard({
               </div>
             )}
 
-            {currentUserRating > 0 && isWatched && (
+            {currentUserRating > 0 && effectiveWatched && (
               <div className="absolute top-2 left-2 md:bottom-2 md:right-2 md:top-auto md:left-auto flex items-center gap-0.5 bg-black/70 rounded-md px-1.5 py-0.5">
                 {" "}
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />

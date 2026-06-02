@@ -1,4 +1,5 @@
 import { useParams, Link, useSearchParams } from "react-router";
+import { CommentsSection } from "../components/CommentsSection";
 import { trpc } from "../providers/trpcClient";
 import { MovieCard } from "../components/MovieCard";
 import type { TitleData } from "../components/MovieCard";
@@ -664,6 +665,8 @@ export default function TitleDetail() {
             </div>
           </div>
         </div>
+
+        <CommentsSection tmdbId={tmdbId} mediaType={mediaType} />
 
         {similar.length > 0 && (
           <section className="mt-12">
