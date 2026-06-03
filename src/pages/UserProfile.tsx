@@ -7,8 +7,20 @@ import { ActivityFeed } from "../components/ActivityFeed";
 import { MovieCard } from "../components/MovieCard";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Loader2, Pencil, Lock, Heart, BookmarkPlus, Activity } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import {
+  Loader2,
+  Pencil,
+  Lock,
+  Heart,
+  BookmarkPlus,
+  Activity,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function UserProfile() {
@@ -16,19 +28,22 @@ export default function UserProfile() {
   const { user: me } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading, error } = trpc.user.getProfile.useQuery(
+  const {
+    data: profile,
+    isLoading,
+    error,
+  } = trpc.user.getProfile.useQuery(
     { username: username! },
-    { enabled: !!username }
+    { enabled: !!username },
   );
   const { data: counts } = trpc.social.followCounts.useQuery(
     { userId: profile?.id ?? 0 },
-    { enabled: !!profile }
+    { enabled: !!profile },
   );
   const { data: featuredData } = trpc.user.getFeaturedFavorites.useQuery(
     { username: username! },
-    { enabled: !!username }
+    { enabled: !!username },
   );
-
 
   if (isLoading) {
     return (
@@ -42,7 +57,12 @@ export default function UserProfile() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <p className="text-muted-foreground">User not found.</p>
-        <Link to="/" className="text-[#d4a843] hover:underline text-sm mt-2 block">Go home</Link>
+        <Link
+          to="/"
+          className="text-[#d4a843] hover:underline text-sm mt-2 block"
+        >
+          Go home
+        </Link>
       </div>
     );
   }
@@ -52,11 +72,18 @@ export default function UserProfile() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         {/* Profile header */}
         <div className="flex flex-col sm:flex-row gap-6 mb-8">
           <Avatar className="h-24 w-24 shrink-0 ring-4 ring-[#d4a843]/20">
-            <AvatarImage src={avatarSrc} alt={profile.name} className="object-cover" />
+            <AvatarImage
+              src={avatarSrc}
+              alt={profile.name}
+              className="object-cover"
+            />
             <AvatarFallback className="bg-[#d4a843]/20 text-[#d4a843] text-3xl font-bold">
               {profile.name.charAt(0).toUpperCase()}
             </AvatarFallback>
@@ -65,14 +92,22 @@ export default function UserProfile() {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div>
-                <h1 className="font-display text-2xl font-bold">{profile.name}</h1>
+                <h1 className="font-display text-2xl font-bold">
+                  {profile.name}
+                </h1>
                 {profile.username && (
-                  <p className="text-muted-foreground text-sm">@{profile.username}</p>
+                  <p className="text-muted-foreground text-sm">
+                    @{profile.username}
+                  </p>
                 )}
               </div>
               <div className="flex gap-2">
                 {isOwner ? (
-                  <Button size="sm" variant="outline" onClick={() => navigate(`/u/${profile.username}/edit`)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/u/${profile.username}/edit`)}
+                  >
                     <Pencil className="w-4 h-4 mr-1.5" />
                     Edit Profile
                   </Button>
@@ -83,7 +118,9 @@ export default function UserProfile() {
             </div>
 
             {profile.bio && (
-              <p className="text-sm text-muted-foreground mt-2 max-w-prose">{profile.bio}</p>
+              <p className="text-sm text-muted-foreground mt-2 max-w-prose">
+                {profile.bio}
+              </p>
             )}
 
             <div className="flex gap-4 mt-3 text-sm">
@@ -121,9 +158,16 @@ export default function UserProfile() {
           <TabsContent value="favorites">
             {featuredData && featuredData.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                {featuredData.map((f: { tmdbId: number; mediaType: string }, i: number) => (
-                  <FeaturedTitleCard key={`${f.mediaType}-${f.tmdbId}`} tmdbId={f.tmdbId} mediaType={f.mediaType as "movie" | "tv"} index={i} />
-                ))}
+                {featuredData.map(
+                  (f: { tmdbId: number; mediaType: string }, i: number) => (
+                    <FeaturedTitleCard
+                      key={`${f.mediaType}-${f.tmdbId}`}
+                      tmdbId={f.tmdbId}
+                      mediaType={f.mediaType as "movie" | "tv"}
+                      index={i}
+                    />
+                  ),
+                )}
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-10 text-sm">
@@ -149,7 +193,10 @@ export default function UserProfile() {
             <TabsContent value="watchlist">
               {isOwner ? (
                 <p className="text-center text-muted-foreground py-10 text-sm">
-                  <Link to="/watchlist" className="text-[#d4a843] hover:underline">
+                  <Link
+                    to="/watchlist"
+                    className="text-[#d4a843] hover:underline"
+                  >
                     Go to your watchlist →
                   </Link>
                 </p>
@@ -164,23 +211,42 @@ export default function UserProfile() {
   );
 }
 
-function FeaturedTitleCard({ tmdbId, mediaType, index }: { tmdbId: number; mediaType: "movie" | "tv"; index: number }) {
+function FeaturedTitleCard({
+  tmdbId,
+  mediaType,
+  index,
+}: {
+  tmdbId: number;
+  mediaType: "movie" | "tv";
+  index: number;
+}) {
   const { data } = trpc.movie.details.useQuery({ id: tmdbId, mediaType });
-  if (!data) return <div className="aspect-[2/3] rounded-xl bg-muted animate-pulse" />;
+  if (!data)
+    return <div className="aspect-[2/3] rounded-xl bg-muted animate-pulse" />;
   return <MovieCard title={data as any} index={index} />;
 }
 
 function PublicWatchlist({ username }: { username: string }) {
-  const [status, setStatus] = useState<"want_to_watch" | "watched" | undefined>(undefined);
+  const [status, setStatus] = useState<"want_to_watch" | "watched" | undefined>(
+    undefined,
+  );
 
-  const { data, isLoading } = trpc.user.getPublicWatchlist.useQuery({ username, status });
+  const { data, isLoading } = trpc.user.getPublicWatchlist.useQuery({
+    username,
+    status,
+  });
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
         {(["all", "want_to_watch", "watched"] as const).map((s) => {
           const val = s === "all" ? undefined : s;
-          const label = s === "all" ? "All" : s === "want_to_watch" ? "Want to watch" : "Watched";
+          const label =
+            s === "all"
+              ? "All"
+              : s === "want_to_watch"
+                ? "Want to watch"
+                : "Watched";
           return (
             <Button
               key={s}
@@ -197,12 +263,19 @@ function PublicWatchlist({ username }: { username: string }) {
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="aspect-[2/3] rounded-xl bg-muted animate-pulse" />
+            <div
+              key={i}
+              className="aspect-[2/3] rounded-xl bg-muted animate-pulse"
+            />
           ))}
         </div>
       ) : !data || data.length === 0 ? (
         <p className="text-center text-muted-foreground py-10 text-sm">
-          {status === "watched" ? "No watched titles yet." : status === "want_to_watch" ? "No titles in watchlist yet." : "Watchlist is empty."}
+          {status === "watched"
+            ? "No watched titles yet."
+            : status === "want_to_watch"
+              ? "No titles in watchlist yet."
+              : "Watchlist is empty."}
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
