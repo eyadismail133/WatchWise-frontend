@@ -1,10 +1,11 @@
 import { trpc } from "../providers/trpcClient";
 import { useAuth } from "../hooks/useAuth";
-import { LogIn, Sparkles, Film, Heart, Star, TrendingUp } from "lucide-react";
+import { LogIn, Sparkles, Film, Heart, Star, TrendingUp, RefreshCw } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Link } from "react-router";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 function RadarChart({ data }: { data: Record<string, number> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -174,122 +175,9 @@ function RadarChart({ data }: { data: Record<string, number> }) {
   );
 }
 
-function generateSummary(
-  genres: string[],
-  moods: string[],
-  avgYear: number,
-  avgRating: number,
-) {
-  const genreText = genres.slice(0, 3).join(", ");
-
-  const moodText =
-    moods.length > 0 ? moods.slice(0, 2).join(" and ") : "immersive cinematic";
-
-  const era =
-    avgYear > 2018
-      ? "modern cinema"
-      : avgYear > 2005
-        ? "contemporary classics"
-        : "timeless storytelling";
-
-  const ratingStyle =
-    avgRating > 7.5
-      ? "highly curated"
-      : avgRating > 6
-        ? "balanced"
-        : "exploratory";
-
-  return `Your library reveals a ${ratingStyle} taste shaped by ${genreText}. You gravitate toward ${moodText} experiences and show a strong appreciation for ${era}. Your profile blends emotional resonance with cinematic variety, creating a uniquely personal viewing identity.`;
-}
-
-function calculateTasteProfile(titles: any[]) {
-  if (!titles.length) {
-    return {
-      narrative: 50,
-      visual: 50,
-      emotional: 50,
-      pacing: 50,
-      era: 50,
-      breadth: 50,
-      topGenres: [],
-      topMoods: [],
-      personality: "Cinema Wanderer",
-      summary: "Start building your library to unlock your cinematic identity.",
-    };
-  }
-
-  const genreMap: Record<string, number> = {};
-  const moodMap: Record<string, number> = {};
-
-  let avgRating = 0;
-  let avgYear = 0;
-  let popularity = 0;
-  let totalWeight = 0;
-
-  titles.forEach((title) => {
-    const weight = title.weight || 1;
-
-    totalWeight += weight;
-
-    avgRating += (title.voteAverage || 0) * weight;
-    avgYear += Number(title.year || 2020) * weight;
-    popularity += (title.popularity || 0) * weight;
-
-    (title.genres || []).forEach((genre: string) => {
-      genreMap[genre] = (genreMap[genre] || 0) + weight;
-    });
-
-    (title.moods || []).forEach((mood: string) => {
-      moodMap[mood] = (moodMap[mood] || 0) + weight;
-    });
-  });
-
-  avgRating /= totalWeight;
-  avgYear /= totalWeight;
-
-  const genres = Object.entries(genreMap)
-    .sort((a, b) => b[1] - a[1])
-    .map(([g]) => g);
-
-  const moods = Object.entries(moodMap)
-    .sort((a, b) => b[1] - a[1])
-    .map(([m]) => m);
-
-  const personality = genres.includes("Sci-Fi")
-    ? "Visionary Explorer"
-    : genres.includes("Drama")
-      ? "Emotional Curator"
-      : genres.includes("Thriller")
-        ? "Tension Seeker"
-        : genres.includes("Fantasy")
-          ? "Dream Architect"
-          : "Cinema Wanderer";
-
-  return {
-    narrative: Math.min(100, avgRating * 10),
-
-    visual: Math.min(100, popularity / totalWeight),
-
-    emotional: moods.includes("emotional") ? 88 : 65,
-
-    pacing: genres.includes("Action") ? 82 : 58,
-
-    era: avgYear > 2015 ? 86 : 62,
-
-    breadth: Math.min(100, genres.length * 12),
-
-    topGenres: genres.slice(0, 5),
-
-    topMoods: moods.slice(0, 6),
-
-    personality,
-
-    summary: generateSummary(genres, moods, avgYear, avgRating),
-  };
-}
-
 export default function TasteProfile() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const utils = trpc.useUtils();
 
   const [stars] = useState(() =>
     [...Array(20)].map(() => ({
@@ -299,12 +187,16 @@ export default function TasteProfile() {
     })),
   );
 
-  const watchlistQuery = trpc.watchlist.list.useQuery(undefined, {
+  const profileQuery = trpc.movie.getAiTasteProfile.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
-  const favoritesQuery = trpc.favorite.list.useQuery(undefined, {
-    enabled: isAuthenticated,
+  const regenerate = trpc.movie.regenerateTasteProfile.useMutation({
+    onSuccess: () => {
+      utils.movie.getAiTasteProfile.invalidate();
+      toast.success("Taste profile regenerated!");
+    },
+    onError: () => toast.error("Failed to regenerate — try again."),
   });
 
   if (authLoading) {
@@ -341,22 +233,29 @@ export default function TasteProfile() {
     );
   }
 
-  const watchlistItems = watchlistQuery.data ?? [];
-  const favoriteItems = favoritesQuery.data ?? [];
+  if (profileQuery.isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-[#d4a843] border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground text-sm">
+          AI is analyzing your taste…
+        </p>
+      </div>
+    );
+  }
 
-  const allTitles = [
-    ...watchlistItems.map((i) => ({
-      ...i.title,
-      weight: 1,
-    })),
-
-    ...favoriteItems.map((i) => ({
-      ...i.title,
-      weight: 2.5,
-    })),
-  ].filter(Boolean);
-
-  const profile = calculateTasteProfile(allTitles);
+  const profile = profileQuery.data ?? {
+    narrative: 50,
+    visual: 50,
+    emotional: 50,
+    pacing: 50,
+    era: 50,
+    breadth: 50,
+    topGenres: [] as string[],
+    topMoods: [] as string[],
+    personality: "Cinema Wanderer",
+    summary: "Start building your library to unlock your cinematic identity.",
+  };
 
   const radarData = {
     narrative: profile.narrative,
@@ -427,9 +326,26 @@ export default function TasteProfile() {
             A cinematic reflection of your personal viewing identity
           </p>
 
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#d4a843]/10 border border-[#d4a843]/20 text-[#d4a843] text-sm font-medium">
-            <Sparkles className="w-4 h-4" />
-            {profile.personality}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#d4a843]/10 border border-[#d4a843]/20 text-[#d4a843] text-sm font-medium">
+              <Sparkles className="w-4 h-4" />
+              {profile.personality}
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => regenerate.mutate()}
+              disabled={regenerate.isPending}
+              className="border-[#8a6fbf]/30 text-[#8a6fbf] hover:bg-[#8a6fbf]/10 text-xs"
+            >
+              {regenerate.isPending ? (
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3 h-3 mr-1" />
+              )}
+              Regenerate
+            </Button>
           </div>
         </div>
 
@@ -498,45 +414,57 @@ export default function TasteProfile() {
             <h3 className="font-display text-lg font-bold mb-4">Top Genres</h3>
 
             <div className="space-y-3">
-              {profile.topGenres.map((genre, i) => (
-                <div key={genre} className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground w-6">
-                    {i + 1}.
-                  </span>
-
-                  <div className="flex-1 h-8 bg-muted rounded-lg flex items-center px-3">
-                    <span className="text-sm font-medium">{genre}</span>
-                  </div>
-
-                  <div
-                    className="h-8 rounded-lg flex items-center px-3"
-                    style={{
-                      width: `${100 - i * 15}%`,
-                      backgroundColor: `rgba(212,168,67,${0.3 - i * 0.05})`,
-                    }}
-                  >
-                    <span className="text-xs text-[#d4a843]">
-                      {100 - i * 15}%
+              {profile.topGenres.length > 0 ? (
+                profile.topGenres.map((genre, i) => (
+                  <div key={genre} className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground w-6">
+                      {i + 1}.
                     </span>
+
+                    <div className="flex-1 h-8 bg-muted rounded-lg flex items-center px-3">
+                      <span className="text-sm font-medium">{genre}</span>
+                    </div>
+
+                    <div
+                      className="h-8 rounded-lg flex items-center px-3"
+                      style={{
+                        width: `${100 - i * 15}%`,
+                        backgroundColor: `rgba(212,168,67,${0.3 - i * 0.05})`,
+                      }}
+                    >
+                      <span className="text-xs text-[#d4a843]">
+                        {100 - i * 15}%
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Watch more titles to see your top genres.
+                </p>
+              )}
             </div>
           </div>
 
           <div className="p-5 rounded-xl bg-card border border-border/50">
             <h3 className="font-display text-lg font-bold mb-4">Top Moods</h3>
 
-            <div className="flex flex-wrap gap-2">
-              {profile.topMoods.map((mood) => (
-                <span
-                  key={mood}
-                  className="px-3 py-2 rounded-lg bg-[#8a6fbf]/10 text-[#8a6fbf] text-sm capitalize border border-[#8a6fbf]/20"
-                >
-                  {mood.replace(/-/g, " ")}
-                </span>
-              ))}
-            </div>
+            {profile.topMoods.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profile.topMoods.map((mood) => (
+                  <span
+                    key={mood}
+                    className="px-3 py-2 rounded-lg bg-[#8a6fbf]/10 text-[#8a6fbf] text-sm capitalize border border-[#8a6fbf]/20"
+                  >
+                    {mood.replace(/-/g, " ")}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Rate and favorite titles to see your mood patterns.
+              </p>
+            )}
           </div>
         </div>
 

@@ -143,8 +143,7 @@ export function MovieCard({
 
   const isWatched = watchlistItem?.status === "watched";
 
-  const currentUserRating =
-    userRate !== undefined ? userRate : (watchlistItem?.userRating ?? 0);
+  const currentUserRating = userRate !== undefined ? userRate : (watchlistItem?.userRating ?? 0);
   const effectiveWatched = isWatched || userStatus === "watched";
 
   const handleAddToWatchlist = () => {
@@ -273,7 +272,7 @@ export function MovieCard({
             )}
 
             {currentUserRating > 0 && effectiveWatched && (
-              <div className="absolute top-2 left-2 flex items-center gap-0.5 bg-black/70 rounded-md px-1.5 py-0.5">
+              <div className="absolute top-2 left-2 md:bottom-2 md:right-2 md:top-auto md:left-auto flex items-center gap-0.5 bg-black/70 rounded-md px-1.5 py-0.5">
                 {" "}
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                 <span className="text-xs text-white">

@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router";
 import { AppLayout } from "./components/AppLayout";
+import { ScrollToTop } from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import Search from "./pages/Search";
@@ -16,6 +17,7 @@ import UserSearch from "./pages/UserSearch";
 export default function App() {
   return (
     <AppLayout>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/discover" element={<Discover />} />
