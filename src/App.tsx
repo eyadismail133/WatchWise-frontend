@@ -13,6 +13,8 @@ import UserProfile from "./pages/UserProfile";
 import EditProfile from "./pages/EditProfile";
 import Feed from "./pages/Feed";
 import UserSearch from "./pages/UserSearch";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 export default function App() {
   return (
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/u/:username/edit" element={<EditProfile />} />
         <Route path="/feed" element={<Feed />} />
         <Route path="/users" element={<UserSearch />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>

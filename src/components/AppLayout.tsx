@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { useState } from "react";
 import { Navbar } from "./Navbar";
+import { Footer } from "./Footer";
 import {
   BookmarkPlus,
   Compass,
@@ -47,6 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       />
 
       <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <Footer />
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50">
         <div className="flex items-center justify-around py-2">
