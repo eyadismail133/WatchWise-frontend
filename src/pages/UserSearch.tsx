@@ -43,7 +43,7 @@ export default function UserSearch() {
 
         {data && data.items.length > 0 && (
           <div className="space-y-2">
-            {data.items.map((user: any) => (
+            {data.items.map((user) => (
               <UserCard key={user.id} user={user} />
             ))}
           </div>
@@ -58,4 +58,3 @@ export default function UserSearch() {
     </div>
   );
 }
-

@@ -14,6 +14,7 @@ import {
   Clock,
   Globe,
   Heart,
+  Film,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { motion } from "framer-motion";
@@ -155,6 +156,10 @@ export default function TitleDetail() {
 
   const [userRating, setUserRating] = useState(0);
 
+  const [failedSources, setFailedSources] = useState<Record<string, boolean>>(
+    {},
+  );
+
   const title = titleQuery.data as ExtendedTitleData | undefined;
 
   const similar = (similarQuery.data?.results ?? []) as TitleData[];
@@ -262,219 +267,258 @@ export default function TitleDetail() {
     ? `https://www.youtube.com/watch?v=${title.trailerKey}`
     : null;
 
+  const backdropSrc = title.backdrop_path;
+  const posterSrc = title.poster_path;
+
+  const currentImageSrc =
+    backdropSrc && !failedSources[backdropSrc]
+      ? backdropSrc
+      : posterSrc && !failedSources[posterSrc]
+        ? posterSrc
+        : null;
+
+  const isPortraitPoster = Boolean(
+    currentImageSrc && currentImageSrc === posterSrc,
+  );
+
+  const handleImageError = () => {
+    if (currentImageSrc) {
+      setFailedSources((prev) => ({ ...prev, [currentImageSrc]: true }));
+    }
+  };
+
   return (
     <div className="min-h-screen">
-      <section className="relative h-[60vh] min-h-[400px]">
-        <img
-          src={title.backdrop_path ?? title.poster_path ?? undefined}
-          alt={title.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+      <section
+        data-testid="detail-hero"
+        className="relative w-full overflow-hidden min-h-[420px] md:min-h-[480px] lg:min-h-[520px] flex flex-col justify-between bg-card/40 border-b border-border/40"
+      >
+        {currentImageSrc ? (
+          <div className="absolute inset-0 w-full h-full pointer-events-none">
+            <img
+              data-testid="detail-hero-image"
+              src={currentImageSrc}
+              alt={title.title}
+              className={`w-full h-full ${
+                isPortraitPoster
+                  ? "object-contain object-top md:object-right-top opacity-60 md:opacity-80"
+                  : "object-cover object-top"
+              }`}
+              onError={handleImageError}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/25" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/55 to-transparent" />
+          </div>
+        ) : (
+          <div
+            data-testid="detail-hero-fallback"
+            className="absolute inset-0 w-full h-full bg-gradient-to-br from-card/80 via-background to-card/40 flex items-center justify-center pointer-events-none"
+          >
+            <div className="text-center p-6 text-muted-foreground/30">
+              <Film className="w-20 h-20 mx-auto mb-2 stroke-[1.2]" />
+              <span className="text-sm tracking-widest uppercase font-semibold">
+                No Artwork Available
+              </span>
+            </div>
+          </div>
+        )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
-
-        <div className="absolute inset-0 bg-gradient-to-r from-background/60 to-transparent" />
-
-        <div className="absolute top-4 left-4 z-10">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-6">
           <Link
             to="/"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-black/40 border border-white/10 backdrop-blur-sm text-white/90 hover:text-white hover:bg-black/60 transition-all text-sm font-medium"
           >
             <ChevronLeft className="w-4 h-4" />
             Back
           </Link>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.6,
-              }}
-            >
-              {watchlistItem && (
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
-                    watchlistItem.status === "watched"
-                      ? "bg-green-500/20 text-green-400"
-                      : watchlistItem.status === "want_to_watch"
-                        ? "bg-[#8a6fbf]/20 text-[#8a6fbf]"
-                        : "bg-red-500/20 text-red-400"
-                  }`}
-                >
-                  {watchlistItem.status === "watched"
-                    ? "Watched"
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-8 md:pt-12 pb-8 md:pb-12 flex-1 flex flex-col justify-end">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 16,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.4,
+            }}
+          >
+            {watchlistItem && (
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
+                  watchlistItem.status === "watched"
+                    ? "bg-green-500/20 text-green-400"
                     : watchlistItem.status === "want_to_watch"
-                      ? "In Your Watchlist"
-                      : "Skipped"}
-                </span>
-              )}
+                      ? "bg-[#8a6fbf]/20 text-[#8a6fbf]"
+                      : "bg-red-500/20 text-red-400"
+                }`}
+              >
+                {watchlistItem.status === "watched"
+                  ? "Watched"
+                  : watchlistItem.status === "want_to_watch"
+                    ? "In Your Watchlist"
+                    : "Skipped"}
+              </span>
+            )}
 
-              <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-2">
-                {title.title}
-              </h1>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 max-w-3xl">
+              {title.title}
+            </h1>
 
-              {title.tagline && (
-                <p className="text-white/60 italic mb-2">{title.tagline}</p>
-              )}
+            {title.tagline && (
+              <p className="text-white/70 italic mb-2 text-base md:text-lg max-w-2xl">
+                {title.tagline}
+              </p>
+            )}
 
-              <div className="flex flex-wrap items-center gap-3 text-sm text-white/70 mb-4">
-                {title.releaseYear && <span>{title.releaseYear}</span>}
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/80 mb-4">
+              {title.releaseYear && <span>{title.releaseYear}</span>}
 
-                <span>·</span>
+              <span>·</span>
 
-                <span className="capitalize">{title.type}</span>
+              <span className="capitalize">{title.type}</span>
 
-                {title.runtime ? (
-                  <>
-                    <span>·</span>
+              {title.runtime ? (
+                <>
+                  <span>·</span>
 
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {title.runtime} min
-                    </span>
-                  </>
-                ) : null}
-
-                {title.language && (
-                  <>
-                    <span>·</span>
-
-                    <span className="flex items-center gap-1">
-                      <Globe className="w-3.5 h-3.5" />
-                      {title.language}
-                    </span>
-                  </>
-                )}
-
-                <span>·</span>
-
-                <span className="text-[#d4a843] font-bold">
-                  {title.rating.toFixed(1)}/10
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {title.genres.map((g) => (
-                  <span
-                    key={g}
-                    className="px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs"
-                  >
-                    {g}
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {title.runtime} min
                   </span>
-                ))}
-              </div>
+                </>
+              ) : null}
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={handleAddToWatchlist}
-                  variant={
-                    watchlistItem?.status === "want_to_watch"
-                      ? "default"
-                      : "outline"
-                  }
-                  className={
-                    watchlistItem?.status === "want_to_watch"
-                      ? "bg-[#8a6fbf] hover:bg-[#9a7fcf]"
-                      : "border-white/30 text-white hover:bg-white/10"
-                  }
+              {title.language && (
+                <>
+                  <span>·</span>
+
+                  <span className="flex items-center gap-1">
+                    <Globe className="w-3.5 h-3.5" />
+                    {title.language}
+                  </span>
+                </>
+              )}
+
+              <span>·</span>
+
+              <span className="text-[#d4a843] font-bold">
+                {title.rating.toFixed(1)}/10
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-6 max-w-2xl">
+              {title.genres.map((g) => (
+                <span
+                  key={g}
+                  className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs text-white/90 text-xs border border-white/10"
                 >
-                  <BookmarkPlus className="w-4 h-4 mr-2" />
+                  {g}
+                </span>
+              ))}
+            </div>
 
-                  {watchlistItem?.status === "want_to_watch"
-                    ? "Saved"
-                    : "Add to Watchlist"}
-                </Button>
-                <Button
-                  onClick={handleMarkWatched}
-                  variant={
-                    watchlistItem?.status === "watched" ? "default" : "outline"
-                  }
-                  className={
-                    watchlistItem?.status === "watched"
-                      ? "bg-green-600 hover:bg-green-700"
-                      : "border-white/30 text-white hover:bg-white/10"
-                  }
-                >
-                  <Eye className="w-4 h-4 mr-2" />
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                onClick={handleAddToWatchlist}
+                variant={
+                  watchlistItem?.status === "want_to_watch"
+                    ? "default"
+                    : "outline"
+                }
+                className={
+                  watchlistItem?.status === "want_to_watch"
+                    ? "bg-[#8a6fbf] hover:bg-[#9a7fcf]"
+                    : "border-white/30 text-white hover:bg-white/10"
+                }
+              >
+                <BookmarkPlus className="w-4 h-4 mr-2" />
 
-                  {watchlistItem?.status === "watched"
-                    ? "Watched"
-                    : "Mark Watched"}
-                </Button>
-                <Button
-                  onClick={handleToggleFavorite}
-                  variant={isFavorite ? "default" : "outline"}
-                  className={
-                    isFavorite
-                      ? "bg-[#e86a5c] hover:bg-[#f07a6c]"
-                      : "border-white/30 text-white hover:bg-white/10"
-                  }
-                >
-                  <Heart
-                    className={`w-4 h-4 mr-2 ${
-                      isFavorite ? "fill-current" : ""
-                    }`}
-                  />
+                {watchlistItem?.status === "want_to_watch"
+                  ? "Saved"
+                  : "Add to Watchlist"}
+              </Button>
+              <Button
+                onClick={handleMarkWatched}
+                variant={
+                  watchlistItem?.status === "watched" ? "default" : "outline"
+                }
+                className={
+                  watchlistItem?.status === "watched"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "border-white/30 text-white hover:bg-white/10"
+                }
+              >
+                <Eye className="w-4 h-4 mr-2" />
 
-                  {isFavorite ? "Favorited" : "Add to Favorites"}
-                </Button>
-                {trailerUrl && (
-                  <Button
-                    variant="outline"
-                    className="border-[#d4a843]/30 text-[#d4a843] hover:bg-[#d4a843]/10"
-                    asChild
-                  >
-                    <a href={trailerUrl} target="_blank" rel="noreferrer">
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Watch Trailer
-                    </a>
-                  </Button>
-                )}
+                {watchlistItem?.status === "watched"
+                  ? "Watched"
+                  : "Mark Watched"}
+              </Button>
+              <Button
+                onClick={handleToggleFavorite}
+                variant={isFavorite ? "default" : "outline"}
+                className={
+                  isFavorite
+                    ? "bg-[#e86a5c] hover:bg-[#f07a6c]"
+                    : "border-white/30 text-white hover:bg-white/10"
+                }
+              >
+                <Heart
+                  className={`w-4 h-4 mr-2 ${isFavorite ? "fill-current" : ""}`}
+                />
 
+                {isFavorite ? "Favorited" : "Add to Favorites"}
+              </Button>
+              {trailerUrl && (
                 <Button
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10"
-                  onClick={async () => {
-                    const shareData = {
-                      title: document.title,
-                      text: "Check this out",
-                      url: window.location.href,
-                    };
-
-                    try {
-                      if (navigator.share) {
-                        await navigator.share(shareData);
-                      } else {
-                        await navigator.clipboard.writeText(
-                          window.location.href,
-                        );
-                        toast.success("Link copied");
-                      }
-                    } catch (error) {
-                      // User cancelled sharing
-                      console.log(error);
-                    }
-                  }}
+                  className="border-[#d4a843]/30 text-[#d4a843] hover:bg-[#d4a843]/10"
+                  asChild
                 >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
+                  <a href={trailerUrl} target="_blank" rel="noreferrer">
+                    <PlayCircle className="w-4 h-4 mr-2" />
+                    Watch Trailer
+                  </a>
                 </Button>
-              </div>
-            </motion.div>
-          </div>
+              )}
+
+              <Button
+                variant="outline"
+                className="border-white/30 text-white hover:bg-white/10"
+                onClick={async () => {
+                  const shareData = {
+                    title: document.title,
+                    text: "Check this out",
+                    url: window.location.href,
+                  };
+
+                  try {
+                    if (navigator.share) {
+                      await navigator.share(shareData);
+                    } else {
+                      await navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copied");
+                    }
+                  } catch (error) {
+                    // User cancelled sharing
+                    console.log(error);
+                  }
+                }}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 md:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <motion.section

@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { FollowButton } from "./FollowButton";
 import { useAuth } from "../hooks/useAuth";
 
-interface UserCardUser {
+export interface UserCardUser {
   id: number;
   name: string;
   username: string | null;
@@ -12,6 +12,7 @@ interface UserCardUser {
   bio?: string | null;
   _count?: { followers: number };
 }
+
 
 interface UserCardProps {
   user: UserCardUser;

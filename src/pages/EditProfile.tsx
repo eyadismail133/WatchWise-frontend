@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useState, useMemo } from "react";
+import { Navigate, useNavigate } from "react-router";
 import { trpc } from "../providers/trpcClient";
 import { useAuth } from "../hooks/useAuth";
 import { useDebounce } from "../hooks/useDebounce";
@@ -14,59 +14,63 @@ import { Loader2, Camera, Check, X, Star, GripVertical } from "lucide-react";
 import { motion } from "framer-motion";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "../contracts/app-router";
+
 const TMDB_IMG = "https://image.tmdb.org/t/p/w185";
 
-export default function EditProfile() {
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type ProfileData = RouterOutputs["user"]["getMyProfile"];
+export type FavoriteItem = RouterOutputs["favorite"]["list"][number];
+
+export interface EditProfileFormProps {
+  profile: ProfileData;
+  favorites: FavoriteItem[];
+}
+
+export function EditProfileForm({ profile, favorites }: EditProfileFormProps) {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading, refetchSession } = useAuth();
+  const { refetchSession } = useAuth();
   const utils = trpc.useUtils();
 
-  const { data: profile, isLoading } = trpc.user.getMyProfile.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
-  const { data: favorites, isLoading: favLoading } = trpc.favorite.list.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
-  const [name, setName] = useState("");
-  const [bio, setBio] = useState("");
-  const [username, setUsername] = useState("");
-  const [isWatchlistPublic, setIsWatchlistPublic] = useState(true);
-  const [isActivityPublic, setIsActivityPublic] = useState(true);
+  // Per-field draft overrides: undefined means untouched (fall back to current profile prop)
+  const [nameDraft, setNameDraft] = useState<string | undefined>(undefined);
+  const [bioDraft, setBioDraft] = useState<string | undefined>(undefined);
+  const [usernameDraft, setUsernameDraft] = useState<string | undefined>(undefined);
+  const [isWatchlistPublicDraft, setIsWatchlistPublicDraft] = useState<boolean | undefined>(undefined);
+  const [isActivityPublicDraft, setIsActivityPublicDraft] = useState<boolean | undefined>(undefined);
+  const [featuredDraft, setFeaturedDraft] = useState<
+    { tmdbId: number; mediaType: "movie" | "tv" }[] | undefined
+  >(undefined);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
-  // Featured favorites: array of {tmdbId, mediaType} ordered by selection
-  const [featuredIds, setFeaturedIds] = useState<{ tmdbId: number; mediaType: string }[]>([]);
-  const [featuredDirty, setFeaturedDirty] = useState(false);
+  // Derive current display values: use draft override if explicitly edited, else latest prop
+  const currentName = nameDraft !== undefined ? nameDraft : (profile.name ?? "");
+  const currentBio = bioDraft !== undefined ? bioDraft : (profile.bio ?? "");
+  const currentUsername = usernameDraft !== undefined ? usernameDraft : (profile.username ?? "");
+  const currentIsWatchlistPublic =
+    isWatchlistPublicDraft !== undefined ? isWatchlistPublicDraft : profile.isWatchlistPublic;
+  const currentIsActivityPublic =
+    isActivityPublicDraft !== undefined ? isActivityPublicDraft : profile.isActivityPublic;
 
-  useEffect(() => {
-    if (profile) {
-      setName(profile.name ?? "");
-      setBio(profile.bio ?? "");
-      setUsername(profile.username ?? "");
-      setIsWatchlistPublic(profile.isWatchlistPublic);
-      setIsActivityPublic(profile.isActivityPublic);
-    }
-  }, [profile]);
+  // Derive featured items: use draft override if edited (including []), else server featuredRank order
+  const serverFeatured = useMemo(() => {
+    return favorites
+      .filter((f) => f.featuredRank != null)
+      .sort((a, b) => (a.featuredRank ?? 0) - (b.featuredRank ?? 0))
+      .map((f) => ({ tmdbId: f.tmdbId, mediaType: f.mediaType }));
+  }, [favorites]);
 
-  // Pre-select existing featured favorites once favorites load
-  useEffect(() => {
-    if (favorites && !featuredDirty) {
-      const featured = (favorites as any[])
-        .filter((f: any) => f.featuredRank != null)
-        .sort((a: any, b: any) => a.featuredRank - b.featuredRank)
-        .map((f: any) => ({ tmdbId: f.tmdbId, mediaType: f.mediaType }));
-      setFeaturedIds(featured);
-    }
-  }, [favorites, featuredDirty]);
+  const currentFeatured = featuredDraft !== undefined ? featuredDraft : serverFeatured;
 
-  const debouncedUsername = useDebounce(username, 400);
+  const debouncedUsername = useDebounce(currentUsername, 400);
   const { data: usernameCheck } = trpc.user.checkUsername.useQuery(
     { username: debouncedUsername },
-    { enabled: debouncedUsername.length >= 3 && debouncedUsername !== profile?.username }
+    { enabled: debouncedUsername.length >= 3 && debouncedUsername !== profile.username }
   );
-  const usernameAvailable = debouncedUsername === profile?.username || usernameCheck?.available;
+  const usernameAvailable =
+    debouncedUsername === profile.username ||
+    (debouncedUsername.length >= 3 && Boolean(usernameCheck?.available));
 
   const updateProfile = trpc.user.updateProfile.useMutation({
     onSuccess: () => {
@@ -86,7 +90,7 @@ export default function EditProfile() {
   });
 
   const setFeaturedFavorites = trpc.user.setFeaturedFavorites.useMutation({
-    onSuccess: () => utils.user.getFeaturedFavorites.invalidate({ username: profile?.username ?? "" }),
+    onSuccess: () => utils.user.getFeaturedFavorites.invalidate({ username: profile.username ?? "" }),
     onError: (err) => toast.error(err.message),
   });
 
@@ -105,40 +109,68 @@ export default function EditProfile() {
     }
   };
 
-  const toggleFeatured = (tmdbId: number, mediaType: string) => {
-    setFeaturedDirty(true);
-    setFeaturedIds((prev) => {
-      const exists = prev.some((f) => f.tmdbId === tmdbId && f.mediaType === mediaType);
-      if (exists) {
-        return prev.filter((f) => !(f.tmdbId === tmdbId && f.mediaType === mediaType));
-      }
+  const toggleFeatured = (tmdbId: number, mediaType: "movie" | "tv") => {
+    const prev = currentFeatured;
+    const exists = prev.some((f) => f.tmdbId === tmdbId && f.mediaType === mediaType);
+    if (exists) {
+      setFeaturedDraft(prev.filter((f) => !(f.tmdbId === tmdbId && f.mediaType === mediaType)));
+    } else {
       if (prev.length >= 5) {
         toast.error("You can only feature up to 5 titles.");
-        return prev;
+        return;
       }
-      return [...prev, { tmdbId, mediaType }];
-    });
+      setFeaturedDraft([...prev, { tmdbId, mediaType }]);
+    }
   };
 
   const handleSave = async () => {
-    const tasks: Promise<any>[] = [];
+    const tasks: Promise<unknown>[] = [];
 
-    if (name !== profile?.name || bio !== (profile?.bio ?? "")) {
-      tasks.push(updateProfile.mutateAsync({ name, bio }));
+    // 1. Profile fields (name, bio) - submit ONLY if explicitly edited and different from server
+    const profileUpdates: { name?: string; bio?: string } = {};
+    if (nameDraft !== undefined && nameDraft !== profile.name) {
+      profileUpdates.name = nameDraft;
+    }
+    if (bioDraft !== undefined && bioDraft !== (profile.bio ?? "")) {
+      profileUpdates.bio = bioDraft;
+    }
+    if (Object.keys(profileUpdates).length > 0) {
+      tasks.push(updateProfile.mutateAsync(profileUpdates));
     }
 
-    if (username !== profile?.username && usernameAvailable) {
-      tasks.push(setUsernameMutation.mutateAsync({ username }));
+    // 2. Username - submit ONLY if explicitly edited, valid length (>= 3), different from server, and available
+    let destinationUsername = profile.username ?? "";
+    const isUsernameEligible =
+      usernameDraft !== undefined &&
+      usernameDraft.length >= 3 &&
+      usernameDraft !== (profile.username ?? "") &&
+      usernameAvailable;
+
+    if (isUsernameEligible) {
+      tasks.push(
+        setUsernameMutation.mutateAsync({ username: usernameDraft }).then(() => {
+          destinationUsername = usernameDraft;
+        })
+      );
     }
 
-    if (isWatchlistPublic !== profile?.isWatchlistPublic || isActivityPublic !== profile?.isActivityPublic) {
-      tasks.push(updatePrivacy.mutateAsync({ isWatchlistPublic, isActivityPublic }));
+    // 3. Privacy fields - submit ONLY if explicitly edited and different from server
+    const privacyUpdates: { isWatchlistPublic?: boolean; isActivityPublic?: boolean } = {};
+    if (isWatchlistPublicDraft !== undefined && isWatchlistPublicDraft !== profile.isWatchlistPublic) {
+      privacyUpdates.isWatchlistPublic = isWatchlistPublicDraft;
+    }
+    if (isActivityPublicDraft !== undefined && isActivityPublicDraft !== profile.isActivityPublic) {
+      privacyUpdates.isActivityPublic = isActivityPublicDraft;
+    }
+    if (Object.keys(privacyUpdates).length > 0) {
+      tasks.push(updatePrivacy.mutateAsync(privacyUpdates));
     }
 
-    if (featuredDirty) {
+    // 4. Featured favorites - submit ONLY if explicitly edited
+    if (featuredDraft !== undefined) {
       tasks.push(
         setFeaturedFavorites.mutateAsync({
-          items: featuredIds.map((f) => ({ tmdbId: f.tmdbId, mediaType: f.mediaType as "movie" | "tv" })),
+          items: featuredDraft.map((f) => ({ tmdbId: f.tmdbId, mediaType: f.mediaType })),
         })
       );
     }
@@ -151,24 +183,11 @@ export default function EditProfile() {
     try {
       await Promise.all(tasks);
       toast.success("Profile updated!");
-      navigate(`/u/${username || profile?.username}`);
+      navigate(`/u/${destinationUsername}`);
     } catch {
       // individual errors already toasted
     }
   };
-
-  if (authLoading || isLoading) {
-    return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !profile) {
-    navigate("/login");
-    return null;
-  }
 
   const avatarSrc = profile.image ?? profile.avatar ?? "";
   const busy =
@@ -221,8 +240,8 @@ export default function EditProfile() {
           <Label htmlFor="name">Display name</Label>
           <Input
             id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={currentName}
+            onChange={(e) => setNameDraft(e.target.value)}
             maxLength={255}
           />
         </div>
@@ -234,8 +253,8 @@ export default function EditProfile() {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
             <Input
               id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+              value={currentUsername}
+              onChange={(e) => setUsernameDraft(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
               className="pl-7"
               maxLength={30}
             />
@@ -258,13 +277,13 @@ export default function EditProfile() {
           <Label htmlFor="bio">Bio</Label>
           <Textarea
             id="bio"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            value={currentBio}
+            onChange={(e) => setBioDraft(e.target.value)}
             maxLength={500}
             className="resize-none"
             rows={3}
           />
-          <p className="text-xs text-muted-foreground text-right">{bio.length}/500</p>
+          <p className="text-xs text-muted-foreground text-right">{currentBio.length}/500</p>
         </div>
 
         {/* Featured Favorites */}
@@ -276,15 +295,11 @@ export default function EditProfile() {
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               Pick up to 5 titles to showcase on your profile.{" "}
-              <span className="text-[#d4a843]">{featuredIds.length}/5 selected</span>
+              <span className="text-[#d4a843]">{currentFeatured.length}/5 selected</span>
             </p>
           </div>
 
-          {favLoading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : !favorites || (favorites as any[]).length === 0 ? (
+          {favorites.length === 0 ? (
             <div className="border border-dashed border-border/50 rounded-xl p-6 text-center">
               <p className="text-sm text-muted-foreground">
                 No favorites yet. Add some titles to your favorites first.
@@ -292,13 +307,13 @@ export default function EditProfile() {
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-              {(favorites as any[]).map((fav: any) => {
+              {favorites.map((fav) => {
                 const title = fav.title;
                 if (!title) return null;
-                const isSelected = featuredIds.some(
+                const isSelected = currentFeatured.some(
                   (f) => f.tmdbId === fav.tmdbId && f.mediaType === fav.mediaType
                 );
-                const selectionIndex = featuredIds.findIndex(
+                const selectionIndex = currentFeatured.findIndex(
                   (f) => f.tmdbId === fav.tmdbId && f.mediaType === fav.mediaType
                 );
 
@@ -344,7 +359,7 @@ export default function EditProfile() {
             </div>
           )}
 
-          {featuredIds.length > 0 && (
+          {currentFeatured.length > 0 && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <GripVertical className="w-3.5 h-3.5" />
               <span>Tap to toggle • Order reflects selection order</span>
@@ -357,17 +372,25 @@ export default function EditProfile() {
           <h2 className="font-medium text-sm">Privacy</h2>
           <div className="flex items-center justify-between">
             <div>
-              <Label>Public watchlist</Label>
+              <Label htmlFor="public-watchlist-switch">Public watchlist</Label>
               <p className="text-xs text-muted-foreground">Others can see your watchlist</p>
             </div>
-            <Switch checked={isWatchlistPublic} onCheckedChange={setIsWatchlistPublic} />
+            <Switch
+              id="public-watchlist-switch"
+              checked={currentIsWatchlistPublic}
+              onCheckedChange={(val) => setIsWatchlistPublicDraft(val)}
+            />
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label>Public activity</Label>
+              <Label htmlFor="public-activity-switch">Public activity</Label>
               <p className="text-xs text-muted-foreground">Others can see your activity feed</p>
             </div>
-            <Switch checked={isActivityPublic} onCheckedChange={setIsActivityPublic} />
+            <Switch
+              id="public-activity-switch"
+              checked={currentIsActivityPublic}
+              onCheckedChange={(val) => setIsActivityPublicDraft(val)}
+            />
           </div>
         </div>
 
@@ -388,4 +411,106 @@ export default function EditProfile() {
       </motion.div>
     </div>
   );
+}
+
+export interface AuthenticatedEditProfileProps {
+  user: NonNullable<ReturnType<typeof useAuth>["user"]>;
+}
+
+export function AuthenticatedEditProfile({ user }: AuthenticatedEditProfileProps) {
+  const profileQuery = trpc.user.getMyProfile.useQuery(undefined, {
+    refetchOnMount: "always",
+  });
+
+  const favoritesQuery = trpc.favorite.list.useQuery(undefined, {
+    refetchOnMount: "always",
+  });
+
+  // Identity validation: cached profile must belong to the currently authenticated user
+  const isProfileOwned = Boolean(
+    profileQuery.data && String(profileQuery.data.id) === String(user.id)
+  );
+
+  // Favorites must belong to the current user (reject foreign cached rows from another account)
+  const hasForeignFavorites = Boolean(
+    favoritesQuery.data &&
+      favoritesQuery.data.some(
+        (item) => item != null && String(item.userId) !== String(user.id)
+      )
+  );
+
+  const isFavoritesOwned = Boolean(
+    favoritesQuery.data && !hasForeignFavorites
+  );
+
+  const ownedFavorites = useMemo(() => {
+    return (favoritesQuery.data ?? []).filter(
+      (item): item is FavoriteItem => item != null && String(item.userId) === String(user.id)
+    );
+  }, [favoritesQuery.data, user.id]);
+
+  // 1. If we have current-account-owned profile and favorites, render the form!
+  // This preserves the mounted form and user drafts even during background fetches or refetch errors.
+  if (isProfileOwned && isFavoritesOwned && profileQuery.data) {
+    return (
+      <EditProfileForm
+        profile={profileQuery.data}
+        favorites={ownedFavorites}
+      />
+    );
+  }
+
+  // 2. If we do NOT have current-account-owned data and a query is actively loading/fetching, show the spinner.
+  if (
+    profileQuery.isLoading ||
+    favoritesQuery.isLoading ||
+    profileQuery.isFetching ||
+    favoritesQuery.isFetching
+  ) {
+    return (
+      <div className="flex justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // 3. If we do not have current-account data and nothing is actively loading (e.g. query failed or stale mismatch),
+  // display deliberate error / retry UI.
+  const errorMessage =
+    profileQuery.error?.message ||
+    favoritesQuery.error?.message ||
+    "Failed to load profile data for the current account.";
+
+  return (
+    <div className="max-w-lg mx-auto px-4 py-16 text-center space-y-4">
+      <p className="text-destructive font-medium">{errorMessage}</p>
+      <Button
+        variant="outline"
+        onClick={() => {
+          profileQuery.refetch();
+          favoritesQuery.refetch();
+        }}
+      >
+        Retry
+      </Button>
+    </div>
+  );
+}
+
+export default function EditProfile() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="flex justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <AuthenticatedEditProfile key={user.id} user={user} />;
 }
