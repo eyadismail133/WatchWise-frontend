@@ -39,7 +39,7 @@ interface MovieCardProps {
   title: TitleData;
   variant?: "default" | "large" | "compact";
   showQuickActions?: boolean;
-  userStatus?: "want_to_watch" | "watched" | null;
+  userStatus?: "want_to_watch" | "watched" | "skipped" | null;
   userRate?: number;
   index?: number;
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "../providers/trpcClient";
 import { useAuth } from "../hooks/useAuth";
-import { CommentItem } from "./CommentItem";
+import { CommentItem, type CommentData } from "./CommentItem";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
@@ -80,7 +80,7 @@ export function CommentsSection({ tmdbId, mediaType }: CommentsSectionProps) {
         </div>
       ) : comments && comments.length > 0 ? (
         <div className="divide-y divide-border/50">
-          {comments.map((c: any) => (
+          {comments.map((c: CommentData) => (
             <CommentItem
               key={c.id}
               comment={c}

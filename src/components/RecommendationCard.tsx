@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { ThumbsUp, ThumbsDown, EyeOff, Sparkles, Diamond } from "lucide-react";
 import { motion } from "framer-motion";
-import { trpc } from "../providers/trpcClient";
 
 interface Recommendation {
   id: number;
@@ -41,11 +40,9 @@ export function RecommendationCard({
   index = 0,
   onFeedback,
 }: RecommendationCardProps) {
-  const feedbackMutation = trpc.recommendation.feedback.useMutation();
   const isFeatured = variant === "featured";
 
   const handleFeedback = (type: "positive" | "negative" | "neutral") => {
-    feedbackMutation.mutate({ id: recommendation.id, feedback: type });
     onFeedback?.(recommendation.id, type);
   };
 
@@ -140,51 +137,53 @@ export function RecommendationCard({
               </div>
             </div>
 
-            {/* Feedback Buttons */}
-            <div className="flex items-center gap-2 mt-5">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleFeedback("positive");
-                }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  recommendation.userFeedback === "positive"
-                    ? "bg-green-500/20 text-green-400"
-                    : "bg-muted hover:bg-green-500/10 hover:text-green-400 text-muted-foreground"
-                }`}
-              >
-                <ThumbsUp className="w-4 h-4" />
-                Great Pick
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleFeedback("negative");
-                }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  recommendation.userFeedback === "negative"
-                    ? "bg-red-500/20 text-red-400"
-                    : "bg-muted hover:bg-red-500/10 hover:text-red-400 text-muted-foreground"
-                }`}
-              >
-                <ThumbsDown className="w-4 h-4" />
-                Not For Me
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleFeedback("neutral");
-                }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  recommendation.userFeedback === "neutral"
-                    ? "bg-muted-foreground/20 text-muted-foreground"
-                    : "bg-muted hover:bg-muted-foreground/10 text-muted-foreground"
-                }`}
-              >
-                <EyeOff className="w-4 h-4" />
-                Skip
-              </button>
-            </div>
+            {/* Feedback Buttons (gated when callback is provided) */}
+            {onFeedback && (
+              <div className="flex items-center gap-2 mt-5">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleFeedback("positive");
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    recommendation.userFeedback === "positive"
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-muted hover:bg-green-500/10 hover:text-green-400 text-muted-foreground"
+                  }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  Great Pick
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleFeedback("negative");
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    recommendation.userFeedback === "negative"
+                      ? "bg-red-500/20 text-red-400"
+                      : "bg-muted hover:bg-red-500/10 hover:text-red-400 text-muted-foreground"
+                  }`}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  Not For Me
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleFeedback("neutral");
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    recommendation.userFeedback === "neutral"
+                      ? "bg-muted-foreground/20 text-muted-foreground"
+                      : "bg-muted hover:bg-muted-foreground/10 text-muted-foreground"
+                  }`}
+                >
+                  <EyeOff className="w-4 h-4" />
+                  Skip
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </Link>
