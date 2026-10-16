@@ -10,7 +10,7 @@ type ActivityType =
   | "reviewed_title"
   | "followed_user";
 
-interface ActivityItemProps {
+export interface ActivityItemProps {
   activity: {
     id: number;
     type: ActivityType;

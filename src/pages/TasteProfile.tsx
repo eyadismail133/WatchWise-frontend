@@ -7,17 +7,17 @@ import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+const RADAR_DIMENSIONS = [
+  { key: "narrative", label: "Narrative" },
+  { key: "visual", label: "Visual" },
+  { key: "emotional", label: "Emotional" },
+  { key: "pacing", label: "Pacing" },
+  { key: "era", label: "Era" },
+  { key: "breadth", label: "Breadth" },
+] as const;
+
 function RadarChart({ data }: { data: Record<string, number> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const dimensions = [
-    { key: "narrative", label: "Narrative" },
-    { key: "visual", label: "Visual" },
-    { key: "emotional", label: "Emotional" },
-    { key: "pacing", label: "Pacing" },
-    { key: "era", label: "Era" },
-    { key: "breadth", label: "Breadth" },
-  ];
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,9 +39,10 @@ function RadarChart({ data }: { data: Record<string, number> }) {
 
     const maxRadius = Math.min(centerX, centerY) - 40;
 
-    const angleStep = (Math.PI * 2) / dimensions.length;
+    const angleStep = (Math.PI * 2) / RADAR_DIMENSIONS.length;
 
     let progress = 0;
+    let animationFrameId: number | undefined;
 
     const animate = () => {
       progress = Math.min(progress + 0.02, 1);
@@ -53,7 +54,7 @@ function RadarChart({ data }: { data: Record<string, number> }) {
 
         const radius = (maxRadius / 5) * i;
 
-        for (let j = 0; j <= dimensions.length; j++) {
+        for (let j = 0; j <= RADAR_DIMENSIONS.length; j++) {
           const angle = j * angleStep - Math.PI / 2;
 
           const x = centerX + radius * Math.cos(angle);
@@ -68,7 +69,7 @@ function RadarChart({ data }: { data: Record<string, number> }) {
         ctx.stroke();
       }
 
-      for (let i = 0; i < dimensions.length; i++) {
+      for (let i = 0; i < RADAR_DIMENSIONS.length; i++) {
         const angle = i * angleStep - Math.PI / 2;
 
         ctx.beginPath();
@@ -93,17 +94,17 @@ function RadarChart({ data }: { data: Record<string, number> }) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        ctx.fillText(dimensions[i].label, labelX, labelY);
+        ctx.fillText(RADAR_DIMENSIONS[i].label, labelX, labelY);
       }
 
       ctx.beginPath();
 
-      const values = dimensions.map((d) => {
+      const values = RADAR_DIMENSIONS.map((d) => {
         const val = data[d.key] || 50;
         return val * progress;
       });
 
-      for (let i = 0; i < dimensions.length; i++) {
+      for (let i = 0; i < RADAR_DIMENSIONS.length; i++) {
         const angle = i * angleStep - Math.PI / 2;
 
         const radius = (maxRadius * values[i]) / 100;
@@ -130,7 +131,7 @@ function RadarChart({ data }: { data: Record<string, number> }) {
 
       ctx.shadowBlur = 0;
 
-      for (let i = 0; i < dimensions.length; i++) {
+      for (let i = 0; i < RADAR_DIMENSIONS.length; i++) {
         const angle = i * angleStep - Math.PI / 2;
 
         const radius = (maxRadius * values[i]) / 100;
@@ -147,7 +148,7 @@ function RadarChart({ data }: { data: Record<string, number> }) {
       }
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
       }
     };
 
@@ -163,8 +164,14 @@ function RadarChart({ data }: { data: Record<string, number> }) {
 
     observer.observe(canvas);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (animationFrameId !== undefined) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [data]);
+
 
   return (
     <canvas

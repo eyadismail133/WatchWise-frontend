@@ -130,7 +130,7 @@ export default function Feed() {
 
             {items.length > 0 && (
               <div className="space-y-2">
-                {items.map((item: any, i: number) => (
+                {items.map((item, i: number) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 8 }}
@@ -168,7 +168,7 @@ export default function Feed() {
                 <h2 className="font-semibold text-sm">People to follow</h2>
               </div>
               <div className="divide-y divide-border/30">
-                {suggestedUsers?.items?.slice(0, 4).map((u: any) => (
+                {suggestedUsers?.items?.slice(0, 4).map((u) => (
                   <div key={u.id} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors">
                     <Link to={u.username ? `/u/${u.username}` : "#"} className="shrink-0">
                       <Avatar className="h-8 w-8">

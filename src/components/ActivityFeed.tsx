@@ -1,5 +1,5 @@
 import { trpc } from "../providers/trpcClient";
-import { ActivityItem } from "./ActivityItem";
+import { ActivityItem, type ActivityItemProps } from "./ActivityItem";
 import { Button } from "./ui/button";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -45,10 +45,11 @@ export function ActivityFeed({ username }: ActivityFeedProps) {
   return (
     <div>
       <div className="divide-y divide-border/50">
-        {items.map((item: any) => (
+        {items.map((item: ActivityItemProps["activity"]) => (
           <ActivityItem key={item.id} activity={item} />
         ))}
       </div>
+
       {nextCursor && (
         <div className="pt-4 flex justify-center">
           <Button variant="outline" size="sm" onClick={() => setNextCursorParam(nextCursor)}>

@@ -167,7 +167,7 @@ export default function UserProfile() {
 function FeaturedTitleCard({ tmdbId, mediaType, index }: { tmdbId: number; mediaType: "movie" | "tv"; index: number }) {
   const { data } = trpc.movie.details.useQuery({ id: tmdbId, mediaType });
   if (!data) return <div className="aspect-[2/3] rounded-xl bg-muted animate-pulse" />;
-  return <MovieCard title={data as any} index={index} />;
+  return <MovieCard title={data} index={index} />;
 }
 
 function PublicWatchlist({ username }: { username: string }) {
@@ -206,10 +206,10 @@ function PublicWatchlist({ username }: { username: string }) {
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {(data as any[]).map((item: any, i: number) => (
+          {data.map((item, i: number) => (
             <MovieCard
               key={item.id}
-              title={item.title as any}
+              title={item.title}
               index={i}
               showQuickActions={false}
               userStatus={item.status}

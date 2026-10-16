@@ -27,6 +27,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { useDebounce } from "../hooks/useDebounce";
 import { trpc } from "../providers/trpcClient";
+import type { UserCardUser } from "./UserCard";
 import logoWatchWise from "../../assets/WatchWise_logo.png";
 
 const navLinks = [
@@ -98,8 +99,7 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
           </Link>
         </div>
 
-        {/* Center: desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((item) => (
             <Link
               key={item.href}
@@ -183,7 +183,7 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
                   {debouncedSearch.length >= 1 && (
                     <div className="max-h-48 overflow-y-auto space-y-0.5">
                       {searchResults?.items && searchResults.items.length > 0 ? (
-                        searchResults.items.map((u: any) => (
+                        searchResults.items.map((u: UserCardUser) => (
                           <button
                             key={u.id}
                             type="button"
@@ -257,9 +257,8 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile expanded menu */}
       {mobileMenuOpen && (
-        <nav className="md:hidden border-t border-border/50 px-3 py-2 space-y-1">
+        <nav className="lg:hidden border-t border-border/50 px-3 py-2 space-y-1">
           {navLinks.map((item) => (
             <Link
               key={item.href}
