@@ -98,3 +98,41 @@ at all three required widths, plus the 20-test suite, lint, build, strict contra
 and bundle gates. The measured initial static graph is 663,783 bytes; largest
 chunk 470,853 bytes. Keep these measured results distinct from historical build
 sizes, and update README plus workflow evidence with every later changeset.
+
+## Motion redesign workflow: 2026-11-06
+
+- Animate with `motion/react` only (never `framer-motion`) and take durations,
+  easings, springs and variants from `src/lib/motion.ts`. Keep
+  `MotionConfig reducedMotion="user"` in `main.tsx`; decorative infinite loops
+  must also respect `useReducedMotion()`.
+- Animate transform/opacity (plus filter sparingly); use `layout`/`layoutId` for
+  size and position. Give each shared indicator group its own `LayoutGroup` id.
+- Do not use `useScroll({ target })` in components with early-return loading or
+  error branches; use page `scrollY` or a child that always renders the target.
+- Every new section needs skeleton, empty, error/retry and success states.
+  Lazy-load heavy, rarely used UI (the quick-search palette is the pattern).
+- Watchlist badges come from `watchlist.statusMap`; invalidate it with
+  `getByTitle` and `list` after watchlist mutations (`useInvalidateLibrary`).
+- Tests rely on `src/test-setup.ts`; assert content and accessibility, not
+  animation frames. Wait for `AnimatePresence` exits with `waitFor`.
+- Gates are unchanged, plus visual checks of new routes (`/person/:id`,
+  `/collection/:id`) at 375/768/1440. Record initial-closure bytes against the
+  716,220-byte figure from this change.
+
+Verification on 2026-11-06 (Claude, container): lint 0/0, build, 28 Vitest tests,
+strict contract and bundle gates pass; mocked-API browser checks at three widths.
+The GPT-6.1 Sol review and Antigravity steps were not run in this session, so
+this changeset is not yet approved for landing.
+
+## Content and AdSense workflow: 2026-11-06
+
+Long-form content lives in `src/content/site.json` and is used by both the React
+pages and `scripts/prerender.mjs`. When adding a content page, add it to the
+prerender route list so crawlers get static HTML, keep `<!--ssg-start-->` /
+`<!--ssg-end-->` in `index.html`, and call `usePageMeta` on every page. Keep
+`public/ads.txt` in sync with the AdSense publisher ID in `index.html`. Show
+JustWatch attribution wherever streaming availability appears.
+
+Verification (Claude, second pass): lint, build + prerender, 30 tests, contract
+and bundle gates pass; frontend + real backend + fake TMDB browser sweep at three
+widths passed. Sol review not run.

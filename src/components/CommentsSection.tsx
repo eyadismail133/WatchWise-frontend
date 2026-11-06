@@ -7,7 +7,7 @@ import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { MessageSquare, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface CommentsSectionProps {
   tmdbId: number;

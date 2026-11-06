@@ -1,196 +1,312 @@
-import { useState, useCallback } from "react";
-import { MovieCard } from "../components/MovieCard";
-import type { TitleData } from "../components/MovieCard";
-import { MoodChip } from "../components/MoodChip";
-import { Search as SearchIcon, Filter, X } from "lucide-react";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { usePageMeta } from "../hooks/usePageMeta";
+import { useSearchParams } from "react-router";
+import { AnimatePresence, motion } from "motion/react";
+import { Search as SearchIcon, X, Film, Tv, Users, LayoutGrid, History, TrendingUp } from "lucide-react";
+import { MovieCard, type TitleData } from "../components/MovieCard";
+import { PersonCard } from "../components/PersonCard";
+import { ErrorState, SkeletonCard, SectionHeader } from "../components/ScrollRow";
+import { SegmentedControl } from "../components/motion/SegmentedControl";
 import { useDebounce } from "../hooks/useDebounce";
 import { trpc } from "../providers/trpcClient";
+import { ease } from "../lib/motion";
 
-const allMoods = [
-  "thought-provoking",
-  "emotional",
-  "dark",
-  "funny",
-  "suspenseful",
-  "visual spectacle",
-  "action-packed",
-  "slow-burn",
-  "mind-bending",
-  "binge-worthy",
-];
+type Tab = "all" | "movie" | "tv" | "people";
+const RECENT_KEY = "watchwise:recent-searches";
+
+function readRecent(): string[] {
+  try {
+    const raw = window.localStorage.getItem(RECENT_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string").slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecent(list: string[]) {
+  try {
+    window.localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8)));
+  } catch {
+    // storage unavailable (private mode) — recent searches are a convenience only
+  }
+}
+
+const grid = "grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
 
 export default function Search() {
-  const [query, setQuery] = useState("");
-  const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
+  const [params, setParams] = useSearchParams();
+  usePageMeta("Search", "Search movies, TV shows, actors and directors on WatchWise.");
+  const [query, setQuery] = useState(params.get("q") ?? "");
+  const [tab, setTab] = useState<Tab>((params.get("tab") as Tab) || "all");
+  const [recent, setRecent] = useState<string[]>(() => (typeof window === "undefined" ? [] : readRecent()));
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const debouncedQuery = useDebounce(query, 300);
+  const debounced = useDebounce(query.trim(), 300);
+  const active = debounced.length >= 2;
 
-  const resultsQuery = trpc.movie.search.useQuery(
-    { query: debouncedQuery, page: 1 },
-    { enabled: debouncedQuery.length >= 2 },
-  );
+  // Keep the URL shareable (?q=…&tab=…) without adding history entries per keystroke.
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (debounced) next.set("q", debounced);
+    if (tab !== "all") next.set("tab", tab);
+    setParams(next, { replace: true });
+  }, [debounced, tab, setParams]);
 
-  const browseQuery = trpc.movie.discoverMovie.useQuery(
-    { page: 1 },
-    { enabled: debouncedQuery.length < 2 },
-  );
+  // Remember meaningful searches.
+  useEffect(() => {
+    if (!active) return;
+    const id = window.setTimeout(() => {
+      setRecent((prev) => {
+        const next = [debounced, ...prev.filter((p) => p.toLowerCase() !== debounced.toLowerCase())].slice(0, 8);
+        writeRecent(next);
+        return next;
+      });
+    }, 1200);
+    return () => window.clearTimeout(id);
+  }, [active, debounced]);
 
-  const rawResults = (resultsQuery.data?.results ??
-    browseQuery.data?.results ??
-    []) as TitleData[];
+  const all = trpc.movie.searchAll.useQuery({ query: debounced }, { enabled: active && tab === "all" });
+  const trending = trpc.movie.trending.useQuery({ timeWindow: "day" }, { enabled: !active });
 
-  const results = rawResults.filter((title) => {
-    if (mediaFilter !== "all" && title.mediaType !== mediaFilter) return false;
-    if (selectedMoods.length === 0) return true;
-    return selectedMoods.some((m) => title.moods.includes(m));
-  });
-
-  const isLoading = resultsQuery.isLoading || browseQuery.isLoading;
-
-  const toggleMood = useCallback((mood: string) => {
-    setSelectedMoods((prev) =>
-      prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood],
-    );
-  }, []);
-
-  const clearFilters = () => {
-    setSelectedMoods([]);
+  const clear = () => {
     setQuery("");
-    setMediaFilter("all");
+    inputRef.current?.focus();
   };
 
   return (
-    <div className="min-h-screen px-6 py-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold mb-6">Search</h1>
+    <div className="min-h-screen px-4 py-10 md:px-6">
+      <div className="mx-auto max-w-7xl">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: ease.out }} className="mb-8">
+          <h1 className="mb-6 font-display text-4xl font-bold tracking-tight">Search</h1>
 
-          <div className="relative max-w-2xl">
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-card border border-border/50 focus-within:border-[#d4a843]/50 transition-colors">
-              <SearchIcon className="w-5 h-5 text-muted-foreground ml-2" />
-              <Input
-                placeholder="Search movies and TV shows..."
-                className="border-0 bg-transparent focus-visible:ring-0"
+          <div className="group relative max-w-3xl">
+            <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#d4a843]/0 via-[#d4a843]/40 to-[#8a6fbf]/0 opacity-0 blur transition-opacity duration-500 group-focus-within:opacity-100" />
+            <div className="relative flex items-center gap-3 rounded-2xl border border-white/10 bg-card/80 p-2 backdrop-blur transition-colors group-focus-within:border-[#d4a843]/50">
+              <SearchIcon className="ml-2 h-5 w-5 text-muted-foreground group-focus-within:text-[#d4a843]" aria-hidden="true" />
+              <input
+                ref={inputRef}
+                autoFocus
+                aria-label="Search movies, TV shows and people"
+                placeholder="Search movies, TV shows, actors, directors…"
+                className="h-11 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground focus-visible:outline-none md:text-lg"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              {query && (
-                <button type="button" onClick={() => setQuery("")} className="p-1">
-                  <X className="w-4 h-4 text-muted-foreground" />
-                </button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`shrink-0 ${showFilters ? "border-[#d4a843] text-[#d4a843]" : ""}`}
-              >
-                <Filter className="w-4 h-4 mr-1" />
-                Filters
-              </Button>
+              <AnimatePresence>
+                {query && (
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                    onClick={clear}
+                    className="rounded-full p-2 hover:bg-white/10"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
-            {(["all", "movie", "tv"] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setMediaFilter(type)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize ${
-                  mediaFilter === type
-                    ? "bg-[#d4a843] text-background"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {type === "all" ? "All" : type === "movie" ? "Movies" : "TV"}
-              </button>
-            ))}
+          <div className="mt-5">
+            <SegmentedControl
+              id="search-tab"
+              label="Result type"
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: "all", label: "All", icon: LayoutGrid },
+                { value: "movie", label: "Movies", icon: Film },
+                { value: "tv", label: "TV", icon: Tv },
+                { value: "people", label: "People", icon: Users },
+              ]}
+            />
           </div>
+        </motion.div>
 
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mt-4 p-4 rounded-xl bg-card border border-border/50"
-            >
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Moods</h3>
-                <div className="flex flex-wrap gap-2">
-                  {allMoods.map((mood) => (
-                    <MoodChip
-                      key={mood}
-                      mood={mood}
-                      selected={selectedMoods.includes(mood)}
-                      onClick={() => toggleMood(mood)}
-                      size="sm"
-                    />
-                  ))}
-                </div>
-              </div>
-              {selectedMoods.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="mt-3 text-muted-foreground hover:text-destructive"
-                >
-                  <X className="w-4 h-4 mr-1" />
-                  Clear Filters
-                </Button>
+        <AnimatePresence mode="wait">
+          {!active ? (
+            <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-10">
+              {recent.length > 0 && (
+                <section aria-labelledby="recent-heading">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 id="recent-heading" className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                      <History className="h-4 w-4" aria-hidden="true" /> Recent searches
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecent([]);
+                        writeRecent([]);
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recent.map((r, i) => (
+                      <motion.button
+                        key={r}
+                        type="button"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => setQuery(r)}
+                        className="rounded-full border border-white/10 px-3 py-1.5 text-sm hover:border-[#d4a843]/40 hover:text-[#e8c866]"
+                      >
+                        {r}
+                      </motion.button>
+                    ))}
+                  </div>
+                </section>
+              )}
+              <section aria-labelledby="popular-heading">
+                <SectionHeader id="popular-heading" title="Popular right now" icon={TrendingUp} accent="#e86a5c" subtitle="Type at least 2 characters to search" />
+                {trending.isError ? (
+                  <ErrorState onRetry={() => trending.refetch()} />
+                ) : (
+                  <div className={grid}>
+                    {trending.isLoading
+                      ? Array.from({ length: 12 }, (_, i) => <SkeletonCard key={i} />)
+                      : ((trending.data?.results ?? []) as TitleData[]).map((t, i) => (
+                          <MovieCard key={`${t.mediaType}-${t.id}`} title={t} index={i} />
+                        ))}
+                  </div>
+                )}
+              </section>
+            </motion.div>
+          ) : (
+            <motion.div key={`results-${tab}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              {tab === "all" ? (
+                all.isLoading ? (
+                  <div className={grid}>{Array.from({ length: 12 }, (_, i) => <SkeletonCard key={i} />)}</div>
+                ) : all.isError ? (
+                  <ErrorState onRetry={() => all.refetch()} />
+                ) : (all.data?.titles.length ?? 0) + (all.data?.people.length ?? 0) === 0 ? (
+                  <NoResults query={debounced} />
+                ) : (
+                  <div className="space-y-12">
+                    {(all.data?.people.length ?? 0) > 0 && (
+                      <section aria-labelledby="people-heading">
+                        <SectionHeader id="people-heading" title="People" icon={Users} accent="#f472b6" />
+                        <div className="scrollbar-hide -mx-4 flex gap-4 overflow-x-auto px-4 pb-2">
+                          {all.data!.people.map((p, i) => (
+                            <div key={p.id} className="w-32 flex-shrink-0">
+                              <PersonCard id={p.id} name={p.name} image={p.image} caption={p.knownFor.slice(0, 2).join(", ")} secondary={p.knownForDepartment} index={i} />
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                    {(all.data?.titles.length ?? 0) > 0 && (
+                      <section aria-labelledby="titles-heading">
+                        <SectionHeader
+                          id="titles-heading"
+                          title="Movies & TV"
+                          icon={Film}
+                          subtitle={`Found ${all.data!.titles.length} result${all.data!.titles.length !== 1 ? "s" : ""} for "${debounced}"`}
+                        />
+                        <div className={grid}>
+                          {(all.data!.titles as TitleData[]).map((t, i) => (
+                            <MovieCard key={`${t.mediaType}-${t.id}`} title={t} index={i} />
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </div>
+                )
+              ) : tab === "people" ? (
+                <PagedPeople query={debounced} />
+              ) : (
+                <PagedTitles query={debounced} mediaType={tab} />
               )}
             </motion.div>
           )}
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-[#d4a843] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : results.length > 0 ? (
-          <div>
-            <p className="text-sm text-muted-foreground mb-4">
-              {debouncedQuery.length >= 2
-                ? `Found ${results.length} result${results.length !== 1 ? "s" : ""} for "${debouncedQuery}"`
-                : `Showing ${results.length} popular titles`}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {results.map((title, i) => (
-                <MovieCard
-                  key={`${title.mediaType}-${title.id}`}
-                  title={title}
-                  index={i}
-                />
-              ))}
-            </div>
-          </div>
-        ) : debouncedQuery.length >= 2 ? (
-          <div className="text-center py-20">
-            <SearchIcon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-            <h3 className="font-display text-lg font-bold text-muted-foreground mb-2">
-              No Results Found
-            </h3>
-            <p className="text-sm text-muted-foreground/60">
-              Try a different search term
-            </p>
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <SearchIcon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
-            <h3 className="font-display text-lg font-bold text-muted-foreground mb-2">
-              Start Searching
-            </h3>
-            <p className="text-sm text-muted-foreground/60">
-              Type at least 2 characters, or browse popular movies below
-            </p>
-          </div>
-        )}
+        </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+function NoResults({ query }: { query: string }) {
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="py-20 text-center">
+      <SearchIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" aria-hidden="true" />
+      <h3 className="mb-2 font-display text-lg font-bold text-muted-foreground">No Results Found</h3>
+      <p className="text-sm text-muted-foreground/70">Nothing matched “{query}”. Check the spelling or try another title.</p>
+    </motion.div>
+  );
+}
+
+function PagedTitles({ query, mediaType }: { query: string; mediaType: "movie" | "tv" }) {
+  const [pages, setPages] = useState(1);
+  const first = trpc.movie.searchTitles.useQuery({ query, mediaType, page: 1 });
+  if (first.isLoading) return <div className={grid}>{Array.from({ length: 12 }, (_, i) => <SkeletonCard key={i} />)}</div>;
+  if (first.isError) return <ErrorState onRetry={() => first.refetch()} />;
+  if ((first.data?.totalResults ?? 0) === 0) return <NoResults query={query} />;
+  return (
+    <>
+      <p className="mb-4 text-sm text-muted-foreground" aria-live="polite">
+        {first.data!.totalResults.toLocaleString()} {mediaType === "tv" ? "shows" : "movies"} for “{query}”
+      </p>
+      <div className={grid}>
+        {Array.from({ length: pages }, (_, i) => (
+          <TitlePage key={i} query={query} mediaType={mediaType} page={i + 1} />
+        ))}
+      </div>
+      {pages < (first.data?.totalPages ?? 1) && (
+        <div className="mt-10 text-center">
+          <button type="button" onClick={() => setPages((p) => p + 1)} className="rounded-full border border-white/15 px-6 py-2.5 text-sm font-medium hover:border-[#d4a843]/50 hover:text-[#e8c866]">
+            Load more
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+function TitlePage({ query, mediaType, page }: { query: string; mediaType: "movie" | "tv"; page: number }) {
+  const q = trpc.movie.searchTitles.useQuery({ query, mediaType, page });
+  if (q.isLoading) return <>{Array.from({ length: 10 }, (_, i) => <SkeletonCard key={i} />)}</>;
+  return (
+    <>
+      {((q.data?.results ?? []) as TitleData[]).map((t, i) => (
+        <MovieCard key={`${t.mediaType}-${t.id}`} title={t} index={i} />
+      ))}
+    </>
+  );
+}
+
+function PagedPeople({ query }: { query: string }) {
+  const [page, setPage] = useState(1);
+  const q = trpc.movie.searchPeople.useQuery({ query, page });
+  if (q.isLoading) return <div className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-6">{Array.from({ length: 12 }, (_, i) => <div key={i} className="shimmer mx-auto h-28 w-28 rounded-full" />)}</div>;
+  if (q.isError) return <ErrorState onRetry={() => q.refetch()} />;
+  if ((q.data?.results.length ?? 0) === 0) return <NoResults query={query} />;
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 md:grid-cols-6">
+        {q.data!.results.map((p, i) => (
+          <PersonCard key={p.id} id={p.id} name={p.name} image={p.image} caption={p.knownFor.slice(0, 2).join(", ")} secondary={p.knownForDepartment} index={i} />
+        ))}
+      </div>
+      {(q.data?.totalPages ?? 1) > 1 && (
+        <div className="mt-10 flex items-center justify-center gap-3 text-sm">
+          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-full border border-white/15 px-4 py-2 disabled:opacity-40">
+            Previous
+          </button>
+          <span className="tabular-nums text-muted-foreground">
+            {page} / {q.data!.totalPages}
+          </span>
+          <button type="button" disabled={page >= q.data!.totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-full border border-white/15 px-4 py-2 disabled:opacity-40">
+            Next
+          </button>
+        </div>
+      )}
+    </>
   );
 }

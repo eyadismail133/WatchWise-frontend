@@ -1,7 +1,9 @@
 import { Link, useLocation } from "react-router";
 import { useState } from "react";
+import { LayoutGroup, motion } from "motion/react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
+import { ScrollProgress } from "./motion/ScrollProgress";
 import {
   BookmarkPlus,
   Compass,
@@ -13,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { trpc } from "../providers/trpcClient";
+import { spring } from "../lib/motion";
 
 const baseNavLinks = [
   { label: "Home", href: "/", icon: LayoutDashboard },
@@ -41,36 +44,57 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     : baseNavLinks;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="film-grain relative flex min-h-screen flex-col overflow-x-clip bg-background">
+      <div aria-hidden="true" className="spotlight pointer-events-none fixed inset-0 -z-0" />
+      <ScrollProgress />
       <Navbar
         mobileMenuOpen={mobileMenuOpen}
         onMobileMenuToggle={() => setMobileMenuOpen((open) => !open)}
       />
 
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main className="relative flex-1 pb-20 md:pb-0">{children}</main>
       <Footer />
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50">
-        <div className="flex items-center justify-around py-2">
-          {navLinks.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? location.pathname === "/"
-                : location.pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-all ${
-                  isActive ? "text-[#d4a843]" : "text-muted-foreground"
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px]">{item.label.split(" ")[0]}</span>
-              </Link>
-            );
-          })}
-        </div>
+      <nav
+        aria-label="Bottom navigation"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#08070d]/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      >
+        <LayoutGroup id="bottom-nav">
+          <div className="flex items-center justify-around py-1.5">
+            {navLinks.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`relative flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 transition-colors ${
+                    isActive ? "text-[#e8c866]" : "text-muted-foreground"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="bottom-nav-active"
+                      transition={spring.layout}
+                      className="absolute inset-0 -z-10 rounded-xl bg-[#d4a843]/[0.12]"
+                    />
+                  )}
+                  <motion.span
+                    animate={isActive ? { y: -2, scale: 1.1 } : { y: 0, scale: 1 }}
+                    transition={spring.snappy}
+                    className="block"
+                  >
+                    <item.icon className="h-5 w-5" aria-hidden="true" />
+                  </motion.span>
+                  <span className="text-[10px]">{item.label.split(" ")[0]}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </LayoutGroup>
       </nav>
     </div>
   );

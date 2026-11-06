@@ -106,6 +106,9 @@ function createMockTitle(id: number, title: string, mediaType: "movie" | "tv" = 
     country: "US",
     imdbRating: null,
     trailerKey: null,
+    backdrop_hd: null,
+    voteCount: 0,
+    originalLanguage: "en",
   };
 }
 

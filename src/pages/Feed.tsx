@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageMeta } from "../hooks/usePageMeta";
 import { Link, useNavigate } from "react-router";
 import { trpc } from "../providers/trpcClient";
 import { ActivityItem } from "../components/ActivityItem";
@@ -13,9 +14,11 @@ import {
   TrendingUp,
   ChevronDown,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
+import { SignedOutState } from "../components/SignedOutState";
 
 export default function Feed() {
+  usePageMeta("Activity feed", "What the people you follow on WatchWise are watching, rating and loving.");
   const { isAuthenticated, user: me } = useAuth();
   const navigate = useNavigate();
   const [, setCursor] = useState<string | undefined>(undefined);
@@ -32,30 +35,12 @@ export default function Feed() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md"
-        >
-          <div className="w-20 h-20 rounded-full bg-[#d4a843]/10 flex items-center justify-center mx-auto mb-6">
-            <Rss className="w-10 h-10 text-[#d4a843]" />
-          </div>
-          <h1 className="font-display text-3xl font-bold mb-3">Activity Feed</h1>
-          <p className="text-muted-foreground mb-8 leading-relaxed">
-            Sign in to see what movies and shows the people you follow are watching, rating, and loving.
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={() => navigate("/login")} className="px-6">
-              Sign In
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/discover")}>
-              <Compass className="w-4 h-4 mr-1.5" />
-              Browse titles
-            </Button>
-          </div>
-        </motion.div>
-      </div>
+      <SignedOutState
+        icon={Rss}
+        title="Activity Feed"
+        description="Sign in to see what movies and shows the people you follow are watching, rating, and loving."
+        perks={["Follow friends", "See ratings as they happen", "Comment on titles"]}
+      />
     );
   }
 

@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { usePageMeta } from "../hooks/usePageMeta";
 import { trpc } from "../providers/trpcClient";
 import { UserCard } from "../components/UserCard";
 import { Input } from "../components/ui/input";
 import { Loader2, Users } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useDebounce } from "../hooks/useDebounce";
 
 export default function UserSearch() {
+  usePageMeta("Find people", "Find and follow other WatchWise members.");
   const [q, setQ] = useState("");
   const debouncedQ = useDebounce(q, 300);
 

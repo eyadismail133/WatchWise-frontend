@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { usePageMeta } from "../hooks/usePageMeta";
 import { Navigate, useNavigate } from "react-router";
 import { trpc } from "../providers/trpcClient";
 import { useAuth } from "../hooks/useAuth";
@@ -11,7 +12,7 @@ import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Camera, Check, X, Star, GripVertical } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { uploadImageToCloudinary } from "../lib/cloudinary";
 
 import type { inferRouterOutputs } from "@trpc/server";
@@ -498,6 +499,7 @@ export function AuthenticatedEditProfile({ user }: AuthenticatedEditProfileProps
 }
 
 export default function EditProfile() {
+  usePageMeta("Edit profile");
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   if (authLoading) {

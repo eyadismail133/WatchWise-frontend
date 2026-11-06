@@ -1,6 +1,8 @@
 import { Link } from "react-router";
+import { usePageMeta } from "../hooks/usePageMeta";
 
 export default function TermsOfService() {
+  usePageMeta("Terms of Service", "The terms that govern your use of WatchWise, user accounts, content and conduct.");
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="space-y-6">

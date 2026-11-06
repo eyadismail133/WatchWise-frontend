@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
@@ -22,9 +23,23 @@ export default defineConfig({
           ) {
             return "react-vendor";
           }
+          // Motion is a large, rarely-changing animation runtime shared by every
+          // route; a dedicated chunk keeps the app entry under the 500 kB budget
+          // and lets browsers cache it across deploys.
+          if (
+            id.includes("node_modules/motion/") ||
+            id.includes("node_modules/framer-motion/") ||
+            id.includes("node_modules/motion-dom/") ||
+            id.includes("node_modules/motion-utils/")
+          ) {
+            return "motion-vendor";
+          }
         },
       },
     },
+  },
+  test: {
+    setupFiles: ["./src/test-setup.ts"],
   },
   server: {
     proxy: {

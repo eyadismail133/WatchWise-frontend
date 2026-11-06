@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePageMeta } from "../hooks/usePageMeta";
 import { useParams, Link, useNavigate } from "react-router";
 import { trpc } from "../providers/trpcClient";
 import { useAuth } from "../hooks/useAuth";
@@ -9,9 +10,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loader2, Pencil, Lock, Heart, BookmarkPlus, Activity } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 export default function UserProfile() {
+  usePageMeta("Profile");
   const { username } = useParams<{ username: string }>();
   const { user: me } = useAuth();
   const navigate = useNavigate();

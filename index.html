@@ -3,8 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WatchWise</title>
+    <title>WatchWise — Find the right movie or show, right now</title>
+    <meta
+      name="description"
+      content="WatchWise helps you decide what to watch: AI picks for your mood, trailers, cast and crew, episode ratings, release calendars and where to stream movies and TV shows."
+    />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta property="og:site_name" content="WatchWise" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WatchWise — Find the right movie or show, right now" />
+    <meta
+      property="og:description"
+      content="AI picks for your mood, trailers, cast and crew, episode ratings, release calendars and where to stream movies and TV shows."
+    />
     <link rel="icon" type="image/png" href="./assets/WatchWise_logo.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "WatchWise",
+        "description": "Movie and TV discovery with AI recommendations, trailers, cast and crew, episode ratings and where-to-watch information."
+      }
+    </script>
     <script
       async
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3917258623347817"
@@ -12,7 +32,8 @@
     ></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--ssg-start--><main style="max-width:48rem;margin:0 auto;padding:3rem 1rem;font-family:system-ui,sans-serif;color:#f5f5f5;background:#0a0a0f;line-height:1.7"><h1>WatchWise — find the right movie or show, right now</h1><p>WatchWise is a free movie and TV discovery guide. Describe your mood and get one AI recommendation with the reason it fits, or browse trending, top-rated, upcoming and now-playing titles. Every title page brings together trailers, full cast and crew, an episode-ratings heatmap for series, reviews, recommendations and where to stream, rent or buy in your country.</p><nav><a href="/discover">Discover</a> · <a href="/calendar">Release calendar</a> · <a href="/search">Search</a> · <a href="/guides">Guides</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/contact">Contact</a> · <a href="/privacy-policy">Privacy policy</a></nav></main><!--ssg-end--></div>
+    <noscript>WatchWise needs JavaScript for interactive features. Our guides, FAQ and policies are readable without it.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

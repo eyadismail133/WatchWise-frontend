@@ -1,9 +1,10 @@
 import { trpc } from "../providers/trpcClient";
+import { usePageMeta } from "../hooks/usePageMeta";
 import { useAuth } from "../hooks/useAuth";
-import { LogIn, Sparkles, Film, Heart, Star, TrendingUp, RefreshCw } from "lucide-react";
+import { Sparkles, Film, Heart, Star, TrendingUp, RefreshCw } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Link } from "react-router";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
+import { SignedOutState } from "../components/SignedOutState";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -183,6 +184,7 @@ function RadarChart({ data }: { data: Record<string, number> }) {
 }
 
 export default function TasteProfile() {
+  usePageMeta("Taste profile", "Your AI-generated WatchWise taste profile: favorite genres, moods and viewing personality.");
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const utils = trpc.useUtils();
 
@@ -216,27 +218,12 @@ export default function TasteProfile() {
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="text-center max-w-md">
-          <Sparkles className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-
-          <h2 className="font-display text-2xl font-bold mb-2">
-            Discover Your Taste
-          </h2>
-
-          <p className="text-muted-foreground mb-6">
-            Sign in to unlock your cinematic identity and personalized taste
-            profile.
-          </p>
-
-          <Link to="/login">
-            <Button className="bg-[#d4a843] hover:bg-[#e8c866] text-background">
-              <LogIn className="w-4 h-4 mr-2" />
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <SignedOutState
+        icon={Sparkles}
+        title="Discover Your Taste"
+        description="Sign in to unlock your cinematic identity — an AI portrait of what you love, from pacing to visual style."
+        perks={["AI taste radar", "Your top genres & moods", "Sharper recommendations"]}
+      />
     );
   }
 

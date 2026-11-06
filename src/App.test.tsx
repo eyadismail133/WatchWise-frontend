@@ -56,6 +56,15 @@ vi.mock("./providers/trpcClient", () => ({
       upComing: {
         useQuery: vi.fn(() => ({ data: { results: [] }, isLoading: false })),
       },
+      list: {
+        useQuery: vi.fn(() => ({ data: { results: [] }, isLoading: false })),
+      },
+      trendingPeople: {
+        useQuery: vi.fn(() => ({ data: { results: [] }, isLoading: false })),
+      },
+      genres: {
+        useQuery: vi.fn(() => ({ data: [], isLoading: false })),
+      },
       details: {
         useQuery: vi.fn(
           ({ id, mediaType }: { id: number; mediaType: string }) => ({
@@ -90,6 +99,9 @@ vi.mock("./providers/trpcClient", () => ({
     watchlist: {
       getByTitle: {
         useQuery: vi.fn(() => ({ data: null })),
+      },
+      statusMap: {
+        useQuery: vi.fn(() => ({ data: [] })),
       },
       list: {
         invalidate: vi.fn(),

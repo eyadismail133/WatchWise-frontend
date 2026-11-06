@@ -10,7 +10,8 @@ taste profiles, social profiles, follows, comments, and feeds.
 ## Stack and layout
 
 React 19, TypeScript, Vite 7, React Router 7, Tailwind CSS 3, Radix UI,
-Framer Motion, TanStack React Query, tRPC 11, Better Auth, and Vitest.
+Motion (`motion/react`, formerly Framer Motion), TanStack React Query, tRPC 11,
+Better Auth, cmdk, and Vitest.
 
 | Path | Responsibility |
 | --- | --- |
@@ -22,6 +23,9 @@ Framer Motion, TanStack React Query, tRPC 11, Better Auth, and Vitest.
 | `src/lib/`, `src/hooks/` | API URL, auth, uploads, hooks |
 | `lib/utils.ts` | Class-name utility outside `src/` |
 | `src/index.css`, `tailwind.config.js` | Theme tokens and styling |
+| `src/lib/motion.ts` | Shared motion tokens (easings, springs, variants, page transition) |
+| `src/components/motion/` | Reveal, SegmentedControl (`layoutId` pill), ScrollProgress, AnimatedNumber |
+| `src/components/title/` | Detail-page sections: SectionNav scroll-spy, WatchProviders, ReviewCard, SeasonGuide |
 | `vercel.json`, `public/_redirects` | Hosting route fallback |
 
 ## Local setup
@@ -226,3 +230,105 @@ both workflow documents are updated together; production deployment is separate.
 Independent GPT-6.1 Sol code/test review returned **APPROVED** after rerunning
 build, lint, all 20 tests, strict contract/bundle checks and whitespace validation.
 The reviewer also independently rejected ten malformed bundle fixtures.
+
+## Motion redesign and rich TMDB experience: 2026-11-06
+
+The whole UI was redesigned around a "cinematic noir" concept (dark stage, film
+grain, gold spotlight, Cinzel/Inter) with Motion animation on every surface. The
+dark cinema theme, gold/purple accents, routes and mobile navigation are kept.
+
+**Animation system.** `framer-motion` was replaced by the `motion` package
+(`motion/react`, same engine). `MotionConfig reducedMotion="user"` wraps the app,
+so OS reduced-motion disables transform/layout animation everywhere. All timings
+come from `src/lib/motion.ts`. Routes cross-fade through `AnimatePresence`
+(`mode="wait"`; scroll resets after the exit); the header condenses on scroll and
+uses a gliding `layoutId` pill (also in the mobile bottom bar); a gold scroll
+progress bar sits on top. Cards have 3D tilt + glare on fine pointers, staggered
+in-view reveals and animated status buttons.
+
+**New and rebuilt screens.**
+
+| Area | What users get |
+| --- | --- |
+| Home | Auto-playing hero carousel (Ken Burns crossfade, parallax, poster picker with progress, pauses on hover/focus/hidden tab); Trending (today/week, all/movies/TV), Top 10 with rank numerals, Now in theaters, Popular TV, genre tiles, Trending people, Top rated (movies/TV), Coming soon, Airing today, AI teaser |
+| Title detail | Logo-art title, certification, animated score ring, trailer player (privacy-enhanced YouTube embed), where-to-watch logos by region, sticky scroll-spy section nav, keywords, collection banner, full details (budget, box office, original title, languages, studios/networks), cast grid + crew highlights linking to people, TV next/latest episode and a season guide with expandable episodes, video shelf, photo mosaic + swipeable lightbox, TMDB reviews, comments, recommendations and similar titles |
+| Person (`/person/:id`) | Portrait, age/birthplace/active years, animated stats, biography, external links, Known-for shelf, filterable filmography (acting/crew, movie/TV, timeline/popular/top rated) and photo gallery |
+| Collection (`/collection/:id`) | Saga hero and films in release order |
+| Discover | AI pick panel with example prompts, URL-shareable filters: movies/TV, sort, multi-genre, hidden gems, decade, minimum rating, runtime, original language and streaming services in the viewer's region; active-filter chips; infinite "load more" |
+| Search | Titles + people in one search, Movies/TV/People tabs with pagination, recent searches (localStorage, optional), popular-now idle state, `?q=` deep links |
+| Everywhere | ⌘K / Ctrl+K / `/` quick-search palette (lazy-loaded), skeleton shimmer loading, retry-able error states, cinematic signed-out states, animated 404, TMDB attribution in the footer |
+
+Cards read watchlist status from one cached `watchlist.statusMap` query instead
+of one `getByTitle` request per poster.
+
+**Verification (container, Node 22).**
+
+| Check | Result |
+| --- | --- |
+| `npm run lint` | Pass: zero errors/warnings |
+| `npm run build` | Pass; no oversized-chunk warning |
+| `npm exec -- vitest run` | Pass: 28 tests in seven files (new MovieCard, PersonDetail and rich TitleDetail cases) |
+| `npm run typecheck:contract` | Pass |
+| `npm run check:bundle` | Pass: largest chunk 378,239 bytes; TitleDetail deferred |
+
+Motion now has its own `motion-vendor` chunk (145,051 bytes) next to
+`react-vendor`. Initial static JavaScript is **716,220 bytes (228,495 gzip)**:
+below the original 759,405 but **52,437 bytes above** the 2026-10-16 delivery
+(663,783), because Home now ships the carousel, shelves and motion features.
+`LazyMotion` + `m` components are the next step if that budget matters.
+
+Browser QA ran a production preview with mocked tRPC responses and generated
+local artwork (TMDB, YouTube and image CDNs are unreachable from the build
+environment). Home, Discover, Search, movie and TV detail, Person, Collection,
+Login, Watchlist, Feed, Taste and 404 were checked at 375, 768 and 1440 px with
+no horizontal overflow; the palette, trailer dialog, lightbox, filters and hover
+states were exercised. Not verified: live TMDB responses, signed-in mutations,
+signed-in Feed/Profile/Taste layouts. Tests use a global jsdom shim
+(`src/test-setup.ts`) for `IntersectionObserver`, `ResizeObserver` and
+`matchMedia`. This change was not reviewed by GPT-6.1 Sol and is uncommitted.
+
+## New features, AdSense readiness and end-to-end check: 2026-11-06 (second pass)
+
+**New features**
+
+| Feature | Where |
+| --- | --- |
+| Release calendar: theatrical movies for your country and TV with new episodes, week by week | `/calendar` (also in the header) |
+| Episode-ratings heatmap with best/worst/average episode | TV title pages |
+| Browse by keyword, studio or network (keyword chips and studio/network logos are now links) | `/browse/:kind/:id` |
+| Streaming-region picker remembered per browser (default from the browser language) | Title page, Discover filters, calendar |
+| Season/mid-season finale badges; JustWatch attribution wherever availability is shown (required by TMDB) | Title page |
+
+**AdSense readiness.** Rejections for "low value content" usually mean the
+reviewer found thin or script-only pages. This change adds:
+
+- Original long-form content in `src/content/site.json`: About, FAQ (10 answers),
+  Contact, a full privacy policy (Google AdSense cookies, opt-out links, EEA
+  consent, retention, children) and five editorial guides under `/guides`.
+- `scripts/prerender.mjs` (runs in `npm run build`): writes `dist/<route>.html`
+  for those pages with their own `<title>`, description and full text inside
+  `#root`, so crawlers read real content without JavaScript. `vercel.json` now
+  sets `cleanUrls: true` so `/about` serves `about.html`; other routes still
+  fall back to the SPA.
+- `public/ads.txt` (`pub-3917258623347817`), `public/robots.txt`, richer
+  `index.html` metadata and crawlable fallback text, and per-route titles,
+  descriptions, Open Graph tags and canonical URLs (`usePageMeta`).
+- Set **`VITE_SITE_URL`** (e.g. `https://your-domain`) in the hosting
+  environment to also emit `sitemap.xml`, a `Sitemap:` line in robots.txt and
+  canonical links. Optionally set **`VITE_CONTACT_EMAIL`** to show an email on
+  the Contact page (otherwise it links to GitHub issues).
+
+No code can guarantee AdSense approval; after deploying, request a new review in
+AdSense and make sure the site is on your own domain with these pages linked
+from the footer.
+
+**Verification.** Lint 0/0, build, 30 Vitest tests (new GuideArticle tests and
+heatmap/keyword/attribution assertions), strict contract and bundle gates pass;
+initial static JavaScript is 720,037 bytes (guides on Home are lazy-loaded).
+End-to-end: the built frontend ran against the real backend, which called a
+fake TMDB server returning TMDB-shaped JSON (field names checked against
+developer.themoviedb.org). All 25 routes rendered at 1440, 768 and 375 px
+without page errors, failing API calls (other than comments, which need the
+database) or horizontal overflow; season switching, heatmap, trailer and region
+switching were exercised. Live TMDB responses and signed-in flows remain to be
+checked on the deployed site.

@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { ThumbsUp, ThumbsDown, EyeOff, Sparkles, Diamond } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface Recommendation {
   id: number;
