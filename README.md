@@ -365,3 +365,17 @@ load via `<link>` in `index.html` instead of a CSS `@import`.
 Checks: lint 0/0, build, 30 tests, contract and bundle gates; local end-to-end
 sweep at 1440/375 and a no-JS / slow-JS first-paint check passed.
 
+## Hero fixes and old-design cleanup: 2026-11-06
+
+- While trending data loads, the home hero now shows a skeleton in the new
+  style (the old intro banner and `assets/home background.png` are deleted).
+- The carousel no longer pauses whenever the mouse is over the (full-screen)
+  hero, and clicking a poster/dot no longer pauses it forever. It pauses only
+  while hovering the poster rail, while keyboard focus is inside, or while the
+  tab is hidden. Slide copy remounts per slide instead of waiting on an exit
+  animation, which could leave the old title stuck on screen.
+- Removed unused legacy components (`RecommendationCard`, `MoodChip`,
+  `AuthLayoutSkeleton`).
+- New `HeroCarousel.test.tsx` covers autoplay with the mouse over the hero,
+  autoplay after picking a slide, and the loading skeleton. 33 tests pass.
+
