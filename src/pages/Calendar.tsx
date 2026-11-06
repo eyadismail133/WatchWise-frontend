@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CalendarDays, ChevronLeft, ChevronRight, Film, Tv, Radio } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Film, Globe2, Tv, Radio } from "lucide-react";
 import { trpc } from "../providers/trpcClient";
 import { MovieCard, type TitleData } from "../components/MovieCard";
 import { ErrorState, SkeletonCard } from "../components/ScrollRow";
@@ -62,6 +62,17 @@ export default function Calendar() {
     { staleTime: 30 * 60_000 },
   );
   const results = (q.data?.results ?? []) as TitleData[];
+
+  // Regional release data is sparse in some countries; top up with worldwide releases.
+  const needWorldwide = mediaType === "movie" && !q.isLoading && results.length < 8;
+  const worldwide = trpc.movie.releaseCalendar.useQuery(
+    { mediaType: "movie", from, to },
+    { enabled: needWorldwide, staleTime: 30 * 60_000 },
+  );
+  const shownIds = new Set(results.map((t) => t.id));
+  const worldwideResults = needWorldwide
+    ? ((worldwide.data?.results ?? []) as TitleData[]).filter((t) => !shownIds.has(t.id))
+    : [];
 
   // Movies: group by date when TMDB's date falls inside the week.
   const days = Array.from({ length: 7 }, (_, i) => iso(addDays(weekStart, i)));
@@ -158,7 +169,7 @@ export default function Calendar() {
               <div className={grid}>{Array.from({ length: 12 }, (_, i) => <SkeletonCard key={i} />)}</div>
             ) : q.isError ? (
               <ErrorState message="We couldn't load this week's releases." onRetry={() => q.refetch()} />
-            ) : results.length === 0 ? (
+            ) : results.length === 0 && worldwideResults.length === 0 ? (
               <p className="py-20 text-center text-muted-foreground">No releases found for this week.</p>
             ) : (
               <div className="space-y-10">
@@ -185,6 +196,21 @@ export default function Calendar() {
                       </div>
                     </section>
                   ))}
+                {worldwideResults.length > 0 && (
+                  <section aria-labelledby="worldwide-heading">
+                    <div className="mb-4 flex items-center gap-2 border-b border-white/[0.06] pb-2">
+                      <Globe2 className="h-4 w-4 text-[#8a6fbf]" aria-hidden="true" />
+                      <h2 id="worldwide-heading" className="font-display text-xl font-bold">
+                        Releasing worldwide this week
+                      </h2>
+                    </div>
+                    <div className={grid}>
+                      {worldwideResults.map((t, i) => (
+                        <MovieCard key={`w-${t.id}`} title={t} index={i} />
+                      ))}
+                    </div>
+                  </section>
+                )}
                 {other.length > 0 && (
                   <section aria-labelledby="other-heading">
                     <div className="mb-4 flex items-center gap-2 border-b border-white/[0.06] pb-2">

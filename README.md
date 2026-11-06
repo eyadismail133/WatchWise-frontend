@@ -307,9 +307,10 @@ reviewer found thin or script-only pages. This change adds:
   consent, retention, children) and five editorial guides under `/guides`.
 - `scripts/prerender.mjs` (runs in `npm run build`): writes `dist/<route>.html`
   for those pages with their own `<title>`, description and full text inside
-  `#root`, so crawlers read real content without JavaScript. `vercel.json` now
-  sets `cleanUrls: true` so `/about` serves `about.html`; other routes still
-  fall back to the SPA.
+  `#root`, so crawlers read real content without JavaScript. `vercel.json`
+  rewrites those routes to their `.html` files explicitly and sends every other
+  route to the SPA (`cleanUrls` broke deep links such as `/title/tv/1396` and
+  must not be re-enabled).
 - `public/ads.txt` (`pub-3917258623347817`), `public/robots.txt`, richer
   `index.html` metadata and crawlable fallback text, and per-route titles,
   descriptions, Open Graph tags and canonical URLs (`usePageMeta`).
@@ -332,3 +333,9 @@ without page errors, failing API calls (other than comments, which need the
 database) or horizontal overflow; season switching, heatmap, trailer and region
 switching were exercised. Live TMDB responses and signed-in flows remain to be
 checked on the deployed site.
+
+Live check after deploy (2026-11-06): every new API procedure returned real TMDB
+data from the production backend. Fixed in a follow-up: deep links returned
+Vercel 404s, the hero poster rail overlapped copy below 1280 px (now `xl` only),
+and the calendar now adds worldwide releases when regional data is sparse.
+

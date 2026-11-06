@@ -207,7 +207,7 @@ export function HeroCarousel({ slides, isLoading }: HeroCarouselProps) {
 
       {/* Poster rail / slide picker */}
       {count > 1 && (
-        <div className="absolute bottom-16 right-4 z-20 hidden items-end gap-3 lg:flex lg:right-8">
+        <div className="absolute bottom-16 right-4 z-20 hidden items-end gap-3 xl:flex xl:right-8">
           {slides.map((s, i) => {
             const isActive = i === index % count;
             return (
@@ -243,7 +243,7 @@ export function HeroCarousel({ slides, isLoading }: HeroCarouselProps) {
 
       {/* Mobile dots */}
       {count > 1 && (
-        <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 lg:hidden">
+        <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-1.5 xl:hidden">
           {slides.map((s, i) => (
             <button
               key={s.id}
