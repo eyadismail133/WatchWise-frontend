@@ -62,8 +62,8 @@ import {
 import { cappedDelay, ease, spring } from "../lib/motion";
 
 const heroLine = {
-  hidden: { opacity: 0, y: 22, filter: "blur(6px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.65, ease: ease.out } },
+  hidden: { opacity: 0, y: 22 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: ease.out } },
 };
 
 export default function TitleDetail() {
@@ -400,7 +400,7 @@ export default function TitleDetail() {
                 navigate(-1);
               }
             }}
-            className="group inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-sm font-medium text-white/90 backdrop-blur-md transition-all hover:bg-black/60 hover:text-white"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-sm font-medium text-white/90 transition-all hover:bg-black/60 hover:text-white"
           >
             <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" />
             Back
@@ -485,7 +485,7 @@ export default function TitleDetail() {
               {(title.genreList?.length ? title.genreList : title.genres.map((g, i) => ({ id: i, name: g }))).map((g) => (
                 <span
                   key={g.name}
-                  className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/90 backdrop-blur"
+                  className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/90"
                 >
                   {g.name}
                 </span>
@@ -515,7 +515,7 @@ export default function TitleDetail() {
                 className={`h-11 rounded-full ${
                   status === "want_to_watch"
                     ? "bg-[#8a6fbf] hover:bg-[#9a7fcf]"
-                    : "border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15"
+                    : "border-white/25 bg-white/5 text-white hover:bg-white/15"
                 }`}
               >
                 {status === "want_to_watch" ? (
@@ -532,7 +532,7 @@ export default function TitleDetail() {
                 className={`h-11 rounded-full ${
                   status === "watched"
                     ? "bg-emerald-600 hover:bg-emerald-700"
-                    : "border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15"
+                    : "border-white/25 bg-white/5 text-white hover:bg-white/15"
                 }`}
               >
                 <Eye className="h-4 w-4 sm:mr-2" />
@@ -547,7 +547,7 @@ export default function TitleDetail() {
                   className={`h-11 rounded-full ${
                     isFavorite
                       ? "bg-[#e86a5c] hover:bg-[#f07a6c]"
-                      : "border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15"
+                      : "border-white/25 bg-white/5 text-white hover:bg-white/15"
                   }`}
                 >
                   <motion.span
@@ -564,7 +564,7 @@ export default function TitleDetail() {
               </motion.div>
               <Button
                 variant="outline"
-                className="h-11 rounded-full border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/15"
+                className="h-11 rounded-full border-white/25 bg-white/5 text-white hover:bg-white/15"
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4 sm:mr-2" />
@@ -750,7 +750,7 @@ export default function TitleDetail() {
 
         {/* ================= CAST & CREW ================= */}
         {(castCards.length > 0 || crew.length > 0 || title.directorCard) && (
-          <section id="cast" aria-labelledby="cast-heading" className="scroll-mt-32 py-8">
+          <section id="cast" aria-labelledby="cast-heading" className="cv-auto scroll-mt-32 py-8">
             <SectionHeader
               id="cast-heading"
               title="Cast & Crew"
@@ -830,14 +830,14 @@ export default function TitleDetail() {
 
         {/* ================= SEASONS ================= */}
         {mediaType === "tv" && (title.seasons?.length ?? 0) > 0 && (
-          <section id="seasons" aria-labelledby="seasons-heading" className="scroll-mt-32 py-8">
+          <section id="seasons" aria-labelledby="seasons-heading" className="cv-auto scroll-mt-32 py-8">
             <SectionHeader id="seasons-heading" title="Season guide" icon={Tv} accent="#3b82f6" subtitle={`${title.seasons.length} season${title.seasons.length > 1 ? "s" : ""}`} />
             <SeasonGuide tvId={tmdbId} seasons={title.seasons} />
           </section>
         )}
 
         {mediaType === "tv" && (title.seasons?.filter((x) => x.seasonNumber > 0).length ?? 0) > 0 && (
-          <section id="ratings" aria-labelledby="ratings-heading" className="scroll-mt-32 py-8">
+          <section id="ratings" aria-labelledby="ratings-heading" className="cv-auto scroll-mt-32 py-8">
             <SectionHeader
               id="ratings-heading"
               title="Episode ratings"
@@ -885,7 +885,7 @@ export default function TitleDetail() {
 
         {/* ================= PHOTOS ================= */}
         {backdrops.length > 0 && (
-          <section id="photos" aria-labelledby="photos-heading" className="scroll-mt-32 py-8">
+          <section id="photos" aria-labelledby="photos-heading" className="cv-auto scroll-mt-32 py-8">
             <SectionHeader
               id="photos-heading"
               title="Photos"
@@ -924,7 +924,7 @@ export default function TitleDetail() {
 
         {/* ================= REVIEWS ================= */}
         {reviews.length > 0 && (
-          <section id="reviews" aria-labelledby="reviews-heading" className="scroll-mt-32 py-8">
+          <section id="reviews" aria-labelledby="reviews-heading" className="cv-auto scroll-mt-32 py-8">
             <SectionHeader
               id="reviews-heading"
               title="Critic & community reviews"

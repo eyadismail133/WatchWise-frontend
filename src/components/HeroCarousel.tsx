@@ -113,7 +113,7 @@ export function HeroCarousel({ slides, isLoading }: HeroCarouselProps) {
             >
               <motion.div
                 variants={line}
-                className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d4a843]/30 bg-black/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#e8c866] backdrop-blur"
+                className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d4a843]/30 bg-black/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#e8c866]"
               >
                 <Flame className="h-3.5 w-3.5" aria-hidden="true" />
                 #{(index % count) + 1} Trending today
@@ -164,7 +164,7 @@ export function HeroCarousel({ slides, isLoading }: HeroCarouselProps) {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-white/25 bg-white/5 px-6 text-white backdrop-blur hover:bg-white/15"
+                  className="rounded-full border-white/25 bg-white/5 px-6 text-white hover:bg-white/15"
                 >
                   <Link to="/discover">
                     <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -265,6 +265,6 @@ export function HeroCarousel({ slides, isLoading }: HeroCarouselProps) {
 }
 
 const line = {
-  hidden: { opacity: 0, y: 24, filter: "blur(8px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: ease.out } },
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: ease.out } },
 };

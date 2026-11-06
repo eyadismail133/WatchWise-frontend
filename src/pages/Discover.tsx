@@ -194,7 +194,7 @@ export default function Discover() {
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Discover
           </motion.div>
           <motion.h1
-            variants={{ hidden: { opacity: 0, y: 20, filter: "blur(8px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: ease.out } } }}
+            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: ease.out } } }}
             className="font-display text-4xl font-bold tracking-tight md:text-5xl"
           >
             Find your next <span className="text-gradient">obsession</span>
@@ -273,7 +273,7 @@ export default function Discover() {
                 exit={{ opacity: 0, y: -8, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="mx-auto mt-4 flex max-w-md flex-col items-center gap-3 rounded-2xl border border-[#e86a5c]/30 bg-card/90 p-4 text-center backdrop-blur">
+                <div className="mx-auto mt-4 flex max-w-md flex-col items-center gap-3 rounded-2xl border border-[#e86a5c]/30 bg-card/90 p-4 text-center">
                   <p className="text-sm font-medium">Want AI picks? Sign in to your account first.</p>
                   <div className="flex gap-2">
                     <Button size="sm" variant="ghost" onClick={() => setShowAuthPrompt(false)}>
@@ -352,7 +352,7 @@ export default function Discover() {
         </AnimatePresence>
 
         {/* ---------- Filter bar ---------- */}
-        <div className="relative z-30 -mx-4 mb-6 border-y md:sticky md:top-14 border-white/[0.06] bg-background/85 px-4 py-3 backdrop-blur-xl md:-mx-6 md:px-6">
+        <div className="relative z-30 -mx-4 mb-6 border-y md:sticky md:top-14 border-white/[0.06] bg-background/[0.96] px-4 py-3 md:-mx-6 md:px-6">
           <div className="flex flex-wrap items-center gap-3">
             <SegmentedControl
               id="discover-media"

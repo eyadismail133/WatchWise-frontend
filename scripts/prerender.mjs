@@ -22,7 +22,7 @@ const esc = (s) =>
 const NAV =
   '<nav><a href="/">Home</a> · <a href="/discover">Discover</a> · <a href="/calendar">Release calendar</a> · <a href="/guides">Guides</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/contact">Contact</a> · <a href="/privacy-policy">Privacy policy</a> · <a href="/terms-of-service">Terms</a></nav>';
 const wrap = (inner) =>
-  `<main style="max-width:48rem;margin:0 auto;padding:3rem 1rem;font-family:system-ui,sans-serif;color:#f5f5f5;background:#0a0a0f;line-height:1.7">${inner}${NAV}</main>`;
+  `<main data-ssg style="max-width:48rem;margin:0 auto;padding:3rem 1rem;font-family:system-ui,sans-serif;color:#f5f5f5;background:#0a0a0f;line-height:1.7">${inner}${NAV}</main>`;
 const sections = (list) =>
   list.map((s) => `<section><h2>${esc(s.heading)}</h2>${s.paragraphs.map((p) => `<p>${esc(p)}</p>`).join("")}</section>`).join("");
 

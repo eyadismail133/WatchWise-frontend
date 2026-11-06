@@ -115,7 +115,7 @@ export default function Login() {
         <motion.div
           layout
           transition={spring.layout}
-          className="space-y-4 rounded-3xl border border-white/10 bg-card/80 p-6 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          className="space-y-4 rounded-3xl border border-white/10 bg-card/80 p-6 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]"
         >
           <form onSubmit={handleEmailAuth} className="space-y-4">
             <AnimatePresence initial={false}>

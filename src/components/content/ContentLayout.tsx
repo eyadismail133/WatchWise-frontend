@@ -43,8 +43,8 @@ export function ContentLayout({
           </motion.p>
           <motion.h1
             variants={{
-              hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
-              show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: ease.out } },
+              hidden: { opacity: 0, y: 20 },
+              show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: ease.out } },
             }}
             className="font-display text-4xl font-bold leading-tight tracking-tight text-balance md:text-5xl"
           >

@@ -14,7 +14,7 @@ const links = [
 
 export function Footer() {
   return (
-    <footer className="relative mt-16 border-t border-white/[0.06] text-sm text-muted-foreground">
+    <footer className="cv-auto relative mt-16 border-t border-white/[0.06] text-sm text-muted-foreground">
       <div aria-hidden="true" className="gold-hairline absolute inset-x-0 top-0 h-px" />
       <motion.div
         initial={{ opacity: 0, y: 16 }}

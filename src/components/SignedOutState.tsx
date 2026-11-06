@@ -16,8 +16,8 @@ interface SignedOutStateProps {
 export function SignedOutState({ icon: Icon, title, description, perks = [], headingLevel = 1 }: SignedOutStateProps) {
   const Heading = headingLevel === 1 ? motion.h1 : motion.h2;
   const item = {
-    hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
-    show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: ease.out } },
+    hidden: { opacity: 0, y: 18 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: ease.out } },
   };
 
   return (
@@ -32,15 +32,13 @@ export function SignedOutState({ icon: Icon, title, description, perks = [], hea
         <motion.div variants={item} className="relative mx-auto mb-7 h-24 w-24">
           <motion.span
             className="absolute inset-0 rounded-full bg-[#d4a843]/25 blur-2xl"
-            animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.span
             className="absolute inset-0 rounded-full border border-dashed border-[#d4a843]/40"
             animate={{ rotate: 360 }}
             transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
           />
-          <span className="absolute inset-2 flex items-center justify-center rounded-full border border-white/10 bg-card/80 backdrop-blur">
+          <span className="absolute inset-2 flex items-center justify-center rounded-full border border-white/10 bg-card/80">
             <Icon className="h-9 w-9 text-[#e8c866]" aria-hidden="true" />
           </span>
         </motion.div>
@@ -53,7 +51,7 @@ export function SignedOutState({ icon: Icon, title, description, perks = [], hea
         {perks.length > 0 && (
           <motion.ul variants={item} className="mb-8 flex flex-wrap justify-center gap-2">
             {perks.map((p) => (
-              <li key={p} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-foreground/80 backdrop-blur">
+              <li key={p} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-foreground/80">
                 {p}
               </li>
             ))}
@@ -71,7 +69,7 @@ export function SignedOutState({ icon: Icon, title, description, perks = [], hea
           <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={spring.snappy}>
             <Link
               to="/discover"
-              className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 font-medium backdrop-blur hover:bg-white/10"
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 font-medium hover:bg-white/10"
             >
               <Compass className="h-4 w-4" aria-hidden="true" /> Browse titles
             </Link>

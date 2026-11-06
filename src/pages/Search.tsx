@@ -82,7 +82,7 @@ export default function Search() {
 
           <div className="group relative max-w-3xl">
             <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#d4a843]/0 via-[#d4a843]/40 to-[#8a6fbf]/0 opacity-0 blur transition-opacity duration-500 group-focus-within:opacity-100" />
-            <div className="relative flex items-center gap-3 rounded-2xl border border-white/10 bg-card/80 p-2 backdrop-blur transition-colors group-focus-within:border-[#d4a843]/50">
+            <div className="relative flex items-center gap-3 rounded-2xl border border-white/10 bg-card/80 p-2 transition-colors group-focus-within:border-[#d4a843]/50">
               <SearchIcon className="ml-2 h-5 w-5 text-muted-foreground group-focus-within:text-[#d4a843]" aria-hidden="true" />
               <input
                 ref={inputRef}

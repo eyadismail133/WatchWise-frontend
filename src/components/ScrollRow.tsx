@@ -157,7 +157,11 @@ export function ScrollRow({
   const itemWidth = wide ? "w-[78vw] sm:w-[22rem]" : "w-[38vw] sm:w-44 lg:w-48";
 
   return (
-    <section aria-labelledby={headingId} className={`relative ${className}`}>
+    <section
+      aria-labelledby={headingId}
+      // Padding keeps card hover lift and arrow buttons inside the paint-contained box.
+      className={`cv-auto relative -mx-6 -my-3 px-6 py-3 ${className}`}
+    >
       <SectionHeader {...header} id={headingId} />
 
       {isError ? (
@@ -195,7 +199,7 @@ export function ScrollRow({
               whileTap={{ scale: 0.92 }}
               transition={spring.snappy}
               tabIndex={show ? 0 : -1}
-              className={`absolute top-[38%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 text-white shadow-xl backdrop-blur-md md:flex ${side} ${
+              className={`absolute top-[38%] z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 text-white shadow-xl md:flex ${side} ${
                 show ? "" : "pointer-events-none"
               }`}
             >

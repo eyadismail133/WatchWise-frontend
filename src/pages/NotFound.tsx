@@ -24,8 +24,8 @@ export default function NotFound() {
           </motion.span>
         </motion.div>
         <motion.h1
-          initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: ease.out, delay: 0.1 }}
           className="font-display text-8xl font-bold text-gradient md:text-9xl"
         >

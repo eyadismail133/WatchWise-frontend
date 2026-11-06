@@ -68,7 +68,7 @@ export default function Collection() {
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-            className="group mb-10 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-sm font-medium text-white/90 backdrop-blur-md hover:bg-black/60"
+            className="group mb-10 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-sm font-medium text-white/90 hover:bg-black/60"
           >
             <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" /> Back
           </button>
@@ -85,7 +85,7 @@ export default function Collection() {
               <Layers className="h-4 w-4" aria-hidden="true" /> Collection
             </motion.p>
             <motion.h1
-              variants={{ hidden: { opacity: 0, y: 24, filter: "blur(8px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: ease.out } } }}
+              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: ease.out } } }}
               className="font-display text-4xl font-bold leading-tight text-balance md:text-6xl"
             >
               {data.name}

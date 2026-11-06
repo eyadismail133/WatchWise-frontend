@@ -38,7 +38,7 @@ export function SectionNav({ sections }: { sections: SectionLink[] }) {
   };
 
   return (
-    <div className="sticky top-14 z-30 -mx-4 border-b border-white/[0.06] bg-background/80 px-4 backdrop-blur-xl md:-mx-6 md:px-6">
+    <div className="sticky top-14 z-30 -mx-4 border-b border-white/[0.06] bg-background/[0.96] px-4 md:-mx-6 md:px-6">
       <LayoutGroup id="section-nav">
         <nav aria-label="On this page" className="scrollbar-hide flex gap-1 overflow-x-auto">
           {sections.map((s) => {

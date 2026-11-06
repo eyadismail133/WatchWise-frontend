@@ -137,14 +137,10 @@ export default function Home() {
             <motion.div
               aria-hidden="true"
               className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#8a6fbf]/30 blur-3xl"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.9, 0.6] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
               aria-hidden="true"
               className="absolute -bottom-24 left-10 h-64 w-64 rounded-full bg-[#d4a843]/20 blur-3xl"
-              animate={{ scale: [1.1, 0.9, 1.1] }}
-              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
             />
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="max-w-xl">
@@ -351,7 +347,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 whileHover={{ y: -6 }}
                 transition={{ duration: 0.6, ease: ease.out, delay: cappedDelay(i, 0.1) }}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-card/60 p-6 backdrop-blur"
+                className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-card/60 p-6"
               >
                 <div
                   className="absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-60"

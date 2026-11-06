@@ -5,7 +5,17 @@ import superjson from "superjson";
 import { apiUrl } from "@/lib/api-url";
 import { trpc } from "./trpcClient";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Catalog data changes slowly; avoid refetch storms on focus/remount.
+      staleTime: 5 * 60_000,
+      gcTime: 30 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({

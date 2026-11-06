@@ -83,7 +83,7 @@ export function RecommendationCard({
             )}
 
             {/* Confidence Score */}
-            <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-sm text-white text-sm font-bold flex items-center gap-1.5">
+            <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/70 text-white text-sm font-bold flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#d4a843]" />
               {recommendation.confidence}%
             </div>

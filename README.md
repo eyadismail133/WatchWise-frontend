@@ -339,3 +339,29 @@ data from the production backend. Fixed in a follow-up: deep links returned
 Vercel 404s, the hero poster rail overlapped copy below 1280 px (now `xl` only),
 and the calendar now adds worldwide releases when regional data is sparse.
 
+## Smoothness and first-load fix: 2026-11-06
+
+Measured on a real Windows browser while scrolling Home: the median frame went
+from **83 ms (~12 fps)** to **~17 ms (~60 fps)** when off-screen sections were
+skipped and the full-screen blur/blend effects removed. Changes:
+
+- `.cv-auto` (`content-visibility: auto`) on shelves, detail sections and the
+  footer, so off-screen rows are not laid out or painted. ScrollRow has
+  compensating padding so hover lift and arrows are not clipped.
+- Removed the fixed film-grain blend overlay, `backdrop-blur` outside
+  full-screen dialogs (bars are now near-opaque) and every animated
+  `filter: blur()`; decorative infinite blur animations are now static.
+- Cards load right-sized posters (`w342` with a `w185/w342/w500` srcset) and
+  fade them in with CSS instead of a Motion component per image.
+- React Query defaults: 5 min `staleTime`, no refetch on window focus, one retry.
+- Shorter route transition (0.14 s out, 0.3 s in).
+
+First load no longer shows the old-looking page: `index.html` paints the dark
+background immediately, hides the crawler text (`[data-ssg]`) for JavaScript
+users and shows a branded splash until the app has painted and fonts are
+ready (max 1.2 s). Crawlers without JavaScript still read the full text. Fonts
+load via `<link>` in `index.html` instead of a CSS `@import`.
+
+Checks: lint 0/0, build, 30 tests, contract and bundle gates; local end-to-end
+sweep at 1440/375 and a no-JS / slow-JS first-paint check passed.
+

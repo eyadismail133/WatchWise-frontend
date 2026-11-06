@@ -122,7 +122,7 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
       transition={{ duration: 0.6, ease: ease.out }}
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-500 ${
         scrolled
-          ? "border-white/10 bg-[#08070d]/85 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          ? "border-white/10 bg-[#08070d]/[0.96] shadow-[0_10px_40px_-20px_rgba(0,0,0,0.9)]"
           : "border-transparent bg-gradient-to-b from-black/60 to-transparent"
       }`}
     >
@@ -369,7 +369,7 @@ export function Navbar({ mobileMenuOpen, onMobileMenuToggle }: NavbarProps) {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.35, ease: ease.out }}
-            className="overflow-hidden border-t border-white/10 bg-[#08070d]/95 backdrop-blur-xl lg:hidden"
+            className="overflow-hidden border-t border-white/10 bg-[#08070d]/95 lg:hidden"
           >
             <motion.div
               className="space-y-1 px-3 py-2"

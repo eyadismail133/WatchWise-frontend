@@ -20,3 +20,17 @@ createRoot(document.getElementById("root")!).render(
     </BrowserRouter>
   </StrictMode>,
 );
+
+// Fade out the boot splash once the app has painted and the brand fonts are
+// ready (capped so a slow font never blocks the page).
+const boot = document.getElementById("boot");
+if (boot) {
+  const fontsReady = document.fonts?.ready ?? Promise.resolve();
+  Promise.race([fontsReady, new Promise((r) => setTimeout(r, 1200))]).then(() =>
+    requestAnimationFrame(() => {
+      boot.classList.add("hide");
+      setTimeout(() => boot.remove(), 400);
+    }),
+  );
+}
+

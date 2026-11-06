@@ -19,11 +19,10 @@ export const spring = {
 } satisfies Record<string, Transition>;
 
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   show: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.6, ease: ease.out },
   },
 };
@@ -48,7 +47,7 @@ export const cappedDelay = (index: number, step = 0.045, max = 12) =>
   Math.min(index, max) * step;
 
 export const pageTransition = {
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: ease.out } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.22, ease: ease.inOut } },
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: ease.out } },
+  exit: { opacity: 0, transition: { duration: 0.14, ease: ease.inOut } },
 };

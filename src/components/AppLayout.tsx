@@ -44,7 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     : baseNavLinks;
 
   return (
-    <div className="film-grain relative flex min-h-screen flex-col overflow-x-clip bg-background">
+    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-background">
       <div aria-hidden="true" className="spotlight pointer-events-none fixed inset-0 -z-0" />
       <ScrollProgress />
       <Navbar
@@ -57,7 +57,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <nav
         aria-label="Bottom navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#08070d]/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#08070d]/[0.97] pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <LayoutGroup id="bottom-nav">
           <div className="flex items-center justify-around py-1.5">

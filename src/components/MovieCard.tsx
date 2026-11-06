@@ -200,13 +200,19 @@ export function MovieCard({
     py.set(0.5);
   };
 
-  const imageSrc = isLarge ? (title.backdrop_hd ?? title.backdrop_path ?? title.poster_path) : title.poster_path;
+  // Cards are ~180px wide: ask TMDB for right-sized posters instead of w500.
+  const imageSrc = isLarge
+    ? (title.backdrop_path ?? title.poster_path)
+    : (title.poster_path?.replace("/w500/", "/w342/") ?? null);
+  const srcSet = !isLarge && title.poster_path?.includes("/w500/")
+    ? ["w185 185w", "w342 342w", "w500 500w"].map((v) => title.poster_path!.replace("/w500/", `/${v.split(" ")[0]}/`) + ` ${v.split(" ")[1]}`).join(", ")
+    : undefined;
 
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 28, scale: 0.97 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.55, ease: ease.out, delay: cappedDelay(index, 0.04, 10) }}
         className="relative group [perspective:1000px]"
@@ -245,16 +251,17 @@ export function MovieCard({
               {imageSrc ? (
                 <>
                   {!loaded && <div className="absolute inset-0 shimmer" aria-hidden="true" />}
-                  <motion.img
+                  <img
                     src={imageSrc}
+                    srcSet={srcSet}
+                    sizes={isLarge ? "(min-width: 640px) 352px, 78vw" : "(min-width: 1024px) 192px, (min-width: 640px) 176px, 38vw"}
                     alt=""
                     loading="lazy"
                     decoding="async"
                     onLoad={() => setLoaded(true)}
-                    initial={false}
-                    animate={{ opacity: loaded ? 1 : 0, scale: loaded ? 1 : 1.06 }}
-                    transition={{ duration: 0.7, ease: ease.out }}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.07]"
+                    className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-700 ease-out group-hover:scale-[1.07] ${
+                      loaded ? "opacity-100" : "opacity-0"
+                    }`}
                   />
                 </>
               ) : (
@@ -279,7 +286,7 @@ export function MovieCard({
               {/* rating chip */}
               {rating > 0 && (
                 <div
-                  className={`absolute left-2 top-2 flex items-center gap-1 rounded-full border bg-black/60 px-2 py-0.5 text-[11px] font-semibold backdrop-blur-md ${ratingTone(rating)}`}
+                  className={`absolute left-2 top-2 flex items-center gap-1 rounded-full border bg-black/60 px-2 py-0.5 text-[11px] font-semibold ${ratingTone(rating)}`}
                 >
                   <Star className="h-3 w-3 fill-current" aria-hidden="true" />
                   {rating.toFixed(1)}
@@ -302,7 +309,7 @@ export function MovieCard({
                       {title.genres.slice(0, 2).map((g) => (
                         <span
                           key={g}
-                          className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur"
+                          className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/90"
                         >
                           {g}
                         </span>
@@ -352,7 +359,7 @@ export function MovieCard({
                 disabled={isPending}
                 aria-pressed={isInWatchlist}
                 aria-label={isInWatchlist ? `Remove ${title.title} from watchlist` : `Add ${title.title} to watchlist`}
-                className={`flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-colors disabled:opacity-60 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:opacity-60 ${
                   isInWatchlist
                     ? "border-[#d4a843] bg-[#d4a843] text-black"
                     : "border-white/20 bg-black/50 text-white hover:bg-[#d4a843] hover:text-black"
@@ -383,7 +390,7 @@ export function MovieCard({
                 disabled={isPending}
                 aria-pressed={isWatched}
                 aria-label={isWatched ? `Unmark ${title.title} as watched` : `Mark ${title.title} as watched`}
-                className={`flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition-colors disabled:opacity-60 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors disabled:opacity-60 ${
                   isWatched
                     ? "border-emerald-400 bg-emerald-500 text-white"
                     : "border-white/20 bg-black/50 text-white hover:bg-emerald-500"

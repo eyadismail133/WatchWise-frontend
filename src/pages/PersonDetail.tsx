@@ -205,7 +205,7 @@ export default function PersonDetail() {
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-            className="group mb-8 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-sm font-medium text-white/90 backdrop-blur-md hover:bg-black/60"
+            className="group mb-8 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-sm font-medium text-white/90 hover:bg-black/60"
           >
             <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" /> Back
           </button>
@@ -241,7 +241,7 @@ export default function PersonDetail() {
                 {data.knownForDepartment ?? "Artist"}
               </motion.p>
               <motion.h1
-                variants={{ hidden: { opacity: 0, y: 20, filter: "blur(8px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: ease.out } } }}
+                variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: ease.out } } }}
                 className="font-display text-4xl font-bold leading-tight text-balance md:text-6xl"
               >
                 {data.name}
@@ -281,7 +281,7 @@ export default function PersonDetail() {
                 className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4"
               >
                 {stats.map((s) => (
-                  <div key={s.label} className="rounded-2xl border border-white/[0.07] bg-card/60 px-4 py-3 text-left backdrop-blur">
+                  <div key={s.label} className="rounded-2xl border border-white/[0.07] bg-card/60 px-4 py-3 text-left">
                     <dt className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-muted-foreground">
                       <s.icon className="h-3.5 w-3.5" aria-hidden="true" /> {s.label}
                     </dt>

@@ -34,7 +34,7 @@ export function SegmentedControl<T extends string>({
       <div
         role="tablist"
         aria-label={label}
-        className={`scrollbar-hide relative inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-white/[0.03] p-1 backdrop-blur ${className}`}
+        className={`scrollbar-hide relative inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-white/10 bg-white/[0.03] p-1 ${className}`}
       >
         {options.map((option) => {
           const active = option.value === value;
